@@ -362,6 +362,8 @@
             font-weight: 500;
             padding: 8px 0 4px 0;
             color: #0f172a;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
         .question-text .qid {
             color: #64748b;
@@ -951,12 +953,11 @@
         const txtFileInput = $('txtFileInput');
         const btnClearAllData = $('btnClearAllData');
 
-        // 跳转控件
         const gotoInput = $('gotoInput');
         const gotoBtn = $('gotoBtn');
 
         // ============================================================
-        //  题库解析
+        //  题库解析 (改进版，支持半角/全角分隔符)
         // ============================================================
         function parseQuestions(text) {
             const lines = text.split('\n').map(s => s.trim()).filter(s => s.length > 0);
@@ -966,6 +967,7 @@
 
             while (i < lines.length) {
                 const line = lines[i];
+                // 匹配题号： "1." "1、" "1)" "1." 等
                 const idMatch = line.match(/^(\d+)[\.、\))\s]+/);
                 if (!idMatch) { i++; continue; }
 
@@ -977,15 +979,18 @@
                 let answer = null;
                 let rawAnswer = '';
 
+                // 收集题目文本，直到遇到选项行或参考答案行
                 while (j < lines.length) {
                     const next = lines[j];
-                    const optMatch = next.match(/^([A-Da-d]）?)\s*(.*)/);
-                    if (optMatch && /^[A-Da-d]/.test(optMatch[1])) {
+                    // 检查是否为选项行：字母 + 分隔符（.、)）等）
+                    const optMatch = next.match(/^([A-Da-d])\s*[.、）)）]\s*(.*)/);
+                    if (optMatch) {
                         isChoice = true;
                         opts.push(optMatch[2].trim() || optMatch[1].trim());
                         j++;
                         continue;
                     }
+                    // 检查是否为参考答案行
                     const refMatch = next.match(/^参考答案[：:]\s*([A-Da-d]|正确|错误|对|错)/i);
                     if (refMatch) {
                         rawAnswer = refMatch[1].trim().toUpperCase();
@@ -998,11 +1003,14 @@
                         j++;
                         break;
                     }
+                    // 如果遇到下一题号，停止收集
                     if (/^\d+[\.、\))\s]+/.test(next)) break;
-                    qText += ' ' + next;
+                    // 否则追加到题目文本
+                    qText += '\n' + next;  // 保留换行以显示代码格式
                     j++;
                 }
 
+                // 如果还没找到参考答案，尝试向后查找
                 let k = j;
                 while (k < lines.length && !/^\d+[\.、\))\s]+/.test(lines[k])) {
                     const refMatch2 = lines[k].match(/^参考答案[：:]\s*([A-Da-d]|正确|错误|对|错)/i);
@@ -1020,11 +1028,12 @@
                     k++;
                 }
 
+                // 只有有答案的题目才加入
                 if (answer !== null || rawAnswer) {
                     const qObj = {
                         id: idCounter++,
                         rawId: qid,
-                        q: qText.replace(/\s+/g, ' ').trim(),
+                        q: qText.replace(/\s+/g, ' ').trim(), // 去除多余空白，但保留换行已被替换为空格
                         type: isChoice ? 'choice' : 'judge',
                         opts: isChoice ? opts : [],
                         ans: answer,
@@ -1242,6 +1251,7 @@
 
             const idx = getFilteredIndex(q);
             qidDisplay.textContent = `#${q.rawId || q.id}`;
+            // 显示题目文本（保留换行）
             qBody.textContent = q.q;
 
             qTypeTag.textContent = q.type === 'choice' ? '选择题' : '判断题';
@@ -1268,6 +1278,7 @@
             progressText.textContent = `${idx + 1} / ${total}`;
             progressFill.style.width = `${((idx + 1) / total) * 100}%`;
 
+            // 渲染选项
             optionsContainer.innerHTML = '';
             if (q.type === 'choice') {
                 const labels = ['A', 'B', 'C', 'D'];
@@ -1293,6 +1304,7 @@
                 });
                 optionsContainer.appendChild(container);
             } else {
+                // 判断题
                 const container = document.createElement('div');
                 container.className = 'judge-options';
                 ['正确', '错误'].forEach((label, i) => {
@@ -1317,6 +1329,7 @@
                 optionsContainer.appendChild(container);
             }
 
+            // 显示答案
             if (showingAnswer && q.ans !== null) {
                 let ansStr = '';
                 if (q.type === 'choice') {
@@ -1452,20 +1465,18 @@
             renderAll();
         }
 
-        // ===== 跳转题号功能 =====
+        // ===== 跳转题号 =====
         function gotoQuestion() {
             const val = parseInt(gotoInput.value);
             if (isNaN(val) || val < 1) {
                 alert('请输入有效的题号（正整数）');
                 return;
             }
-            // 在全部题目中查找 rawId 匹配的题目
             const target = allQuestions.find(q => q.rawId === val);
             if (!target) {
                 alert(`未找到题号为 ${val} 的题目`);
                 return;
             }
-            // 重置筛选为全部，并定位到该题
             filter = 'all';
             typeFilter = 'all';
             currentIndex = allQuestions.findIndex(q => q.id === target.id);
@@ -1474,7 +1485,7 @@
             saveData();
             renderAll();
             switchTab('quiz');
-            gotoInput.value = ''; // 清空输入
+            gotoInput.value = '';
         }
 
         // ============================================================
@@ -1779,7 +1790,6 @@
             renderAll();
         });
 
-        // 数据导入导出
         btnExportData.addEventListener('click', exportData);
         btnImportData.addEventListener('click', function() {
             fileInput.click();
@@ -1803,7 +1813,6 @@
 
         btnClearAllData.addEventListener('click', clearAllData);
 
-        // 跳转功能
         gotoBtn.addEventListener('click', gotoQuestion);
         gotoInput.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
@@ -1812,7 +1821,6 @@
             }
         });
 
-        // 键盘快捷键
         document.addEventListener('keydown', function(e) {
             if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
             if (e.key === 'ArrowRight') {
