@@ -305,7 +305,7 @@
 </head>
 <body>
 <div class="container" id="app">
-    <h1>📜 葵花宝典 · 刷题卷 <small>Java 期末预习 · 单刷+全览 · 精准判题</small></h1>
+    <h1>📜 葵花宝典 · 刷题卷 <small>Java 期末预习 · 单刷+全览 · 支持E选项</small></h1>
 
     <div class="upload-area">
         <span class="hint">📤 上传 .docx 题库 (自动识别)</span>
@@ -316,7 +316,7 @@
 
     <div class="mode-bar">
         <span class="mode-label">📌 模式：</span>
-        <button class="mode-btn" :class="{ active: mode === 'single' }" @click="mode = 'single'">🎯 单刷（自动判题）</button>
+        <button class="mode-btn" :class="{ active: mode === 'single' }" @click="mode = 'single'">🎯 单刷</button>
         <button class="mode-btn" :class="{ active: mode === 'all' }" @click="mode = 'all'">📋 全部展示</button>
         <span style="color:#9a8b78;font-size:0.8rem;margin-left:0.4rem;" v-if="questions.length">
             共 {{ questions.length }} 题
@@ -363,13 +363,16 @@
                     </label>
                 </div>
 
-                <!-- 多选题 -->
+                <!-- 多选题（手动确认） -->
                 <div v-else-if="currentQ.type === 'multi'" class="q-options">
                     <label v-for="opt in currentQ.options" :key="opt.letter">
-                        <input type="checkbox" :value="opt.letter" v-model="currentQ.userAnswer" @change="onAnswerChange">
+                        <input type="checkbox" :value="opt.letter" v-model="currentQ.userAnswer">
                         {{ opt.letter + '. ' + opt.text }}
                     </label>
-                    <div style="font-size:0.8rem; color:#7f6e58; margin-top:0.1rem;">（多选，选完自动判题）</div>
+                    <div style="font-size:0.8rem; color:#7f6e58; margin-top:0.1rem;">（多选，选完后点击“确认答案”判题）</div>
+                    <div style="margin-top:0.4rem;">
+                        <button class="btn btn-primary" @click="confirmMultiAnswer" :disabled="currentQ.showAnswer">✅ 确认答案</button>
+                    </div>
                 </div>
 
                 <!-- 判断题 -->
@@ -484,7 +487,7 @@
     </div>
 </div>
 
-<div class="footnote">📖 整理于2026 · 葵花宝典 · 单刷自动判题（判断题已修复） · 上传docx自动识别</div>
+<div class="footnote">📖 整理于2026 · 葵花宝典 · 支持A-E选项 · 上传docx自动识别</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
@@ -545,7 +548,7 @@
                 reader.readAsArrayBuffer(file);
             },
 
-            // -------- 解析核心（增加判断题答案标准化） ----------
+            // -------- 解析核心（支持 A-E 选项） ----------
             parseQuestions(text) {
                 const lines = text.split('\n');
                 const qs = [];
@@ -562,17 +565,17 @@
                     return null;
                 }
 
+                // 判断是否是多选题（答案含多个字母，支持 A-E）
                 function isMultiAnswer(ans) {
-                    return /^[A-D]{2,}$/i.test(ans.trim());
+                    return /^[A-E]{2,}$/i.test(ans.trim());
                 }
 
-                // 将判断题答案标准化为 "正确" 或 "错误"
                 function normalizeJudgeAnswer(ans) {
                     if (!ans) return '';
                     const trimmed = ans.trim();
                     if (/^(正确|对|√|是|T|true)$/i.test(trimmed)) return '正确';
                     if (/^(错误|错|×|否|F|false)$/i.test(trimmed)) return '错误';
-                    return trimmed; // 保留原样，但后续比较会失败，我们尽量匹配
+                    return trimmed;
                 }
 
                 for (let i = 0; i < lines.length; i++) {
@@ -593,16 +596,16 @@
                         const num = parseInt(matchNum[1]);
                         let textPart = line.replace(/^\*\*?\d+\.\*\*\s*/, '').replace(/^\d+\.\s*/, '').replace(/^\d+、\s*/, '');
                         let answer = '';
-                        const ansMatch = textPart.match(/答案[：:]\s*([A-D]+)/);
+                        // 匹配答案，支持 A-E
+                        const ansMatch = textPart.match(/答案[：:]\s*([A-E]+)/);
                         if (ansMatch) {
                             answer = ansMatch[1].trim();
-                            textPart = textPart.replace(/答案[：:]\s*[A-D]+/, '').trim();
+                            textPart = textPart.replace(/答案[：:]\s*[A-E]+/, '').trim();
                         }
                         let type = sectionType;
-                        if (sectionType === 'single' && answer && isMultiAnswer(answer)) {
+                        if (type === 'single' && answer && isMultiAnswer(answer)) {
                             type = 'multi';
                         }
-                        // 如果是判断题，且答案已从题目文本中提取（如 "答案：正确"），需标准化
                         if (type === 'judge' && answer) {
                             answer = normalizeJudgeAnswer(answer);
                         }
@@ -611,7 +614,7 @@
                             type: type,
                             typeName: this.getTypeName(type),
                             text: textPart,
-                            options: [], // {letter, text}
+                            options: [],
                             answer: null,
                             userAnswer: type === 'multi' ? [] : null,
                             referenceAnswer: '',
@@ -620,7 +623,8 @@
                         };
                         if (answer) {
                             if (type === 'multi') {
-                                current._rawAnswer = answer;
+                                current.answer = answer.toUpperCase().split('');
+                                current.referenceAnswer = answer;
                             } else {
                                 current.answer = answer;
                                 current.referenceAnswer = answer;
@@ -631,8 +635,8 @@
 
                     if (!current) continue;
 
-                    // 选项匹配：A. 或 A、 或 A）
-                    const optMatch = line.match(/^([A-D])[\.\、\)]\s*(.*)/);
+                    // 选项匹配：支持 A-E
+                    const optMatch = line.match(/^([A-E])[\.\、\)]\s*(.*)/);
                     if (optMatch && (current.type === 'single' || current.type === 'multi')) {
                         const letter = optMatch[1];
                         const text = optMatch[2];
@@ -640,16 +644,25 @@
                         continue;
                     }
 
-                    // 答案行：答案：X 或 答案：ABCD
                     const ansLine = line.match(/^答案[：:]\s*(.+)/);
                     if (ansLine) {
                         let ans = ansLine[1].trim();
-                        // 判断题答案标准化
                         if (current.type === 'judge') {
                             ans = normalizeJudgeAnswer(ans);
                         }
+                        // 如果当前是单选但答案是多字母（含 A-E），转为多选
+                        if (current.type === 'single' && isMultiAnswer(ans)) {
+                            current.type = 'multi';
+                            current.typeName = this.getTypeName('multi');
+                            if (!Array.isArray(current.userAnswer)) {
+                                current.userAnswer = [];
+                            }
+                            current.answer = ans.toUpperCase().split('');
+                            current.referenceAnswer = ans;
+                            continue;
+                        }
                         if (current.type === 'multi') {
-                            if (/^[A-D]+$/i.test(ans)) {
+                            if (/^[A-E]+$/i.test(ans)) {
                                 current.answer = ans.toUpperCase().split('');
                                 current.referenceAnswer = ans;
                             } else {
@@ -657,7 +670,7 @@
                                 current.referenceAnswer = ans;
                             }
                         } else if (current.type === 'single') {
-                            if (/^[A-D]$/i.test(ans)) {
+                            if (/^[A-E]$/i.test(ans)) {
                                 current.answer = ans.toUpperCase();
                                 current.referenceAnswer = ans;
                             } else {
@@ -671,7 +684,6 @@
                         continue;
                     }
 
-                    // 填空题答案：答：xxx
                     if (current.type === 'fill') {
                         const fillMatch = line.match(/^[答案|答][：:]\s*(.+)/);
                         if (fillMatch) {
@@ -681,7 +693,6 @@
                         }
                     }
 
-                    // 主观题答案
                     if ((current.type === 'essay' || current.type === 'coding' || current.type === 'design')) {
                         const subMatch = line.match(/^[答案|答][：:]\s*(.+)/);
                         if (subMatch) {
@@ -691,18 +702,17 @@
                         }
                     }
 
-                    // 其他文本追加到题目描述
-                    if (!/^[A-D]/.test(line) && !/^答案/.test(line) && !/^[一二三四五六]/.test(line)) {
+                    if (!/^[A-E]/.test(line) && !/^答案/.test(line) && !/^[一二三四五六]/.test(line)) {
                         current.text += '<br>' + line;
                     }
                 }
 
                 if (current) qs.push(current);
 
-                // 后处理：多选答案标准化，单选项文本转字母，判断题答案进一步确保标准化
+                // 后处理
                 qs.forEach(q => {
                     if (q.type === 'multi') {
-                        if (typeof q.answer === 'string' && /^[A-D]+$/i.test(q.answer)) {
+                        if (typeof q.answer === 'string' && /^[A-E]+$/i.test(q.answer)) {
                             q.answer = q.answer.toUpperCase().split('');
                             q.referenceAnswer = q.answer.join('');
                         } else if (Array.isArray(q.answer)) {
@@ -715,8 +725,8 @@
                             q.userAnswer = [];
                         }
                     } else if (q.type === 'single') {
-                        if (typeof q.answer === 'string' && q.answer.length === 1 && /^[A-D]$/i.test(q.answer)) {
-                            // 已是字母
+                        if (typeof q.answer === 'string' && q.answer.length === 1 && /^[A-E]$/i.test(q.answer)) {
+                            // ok
                         } else if (typeof q.answer === 'string' && q.answer.length > 1) {
                             const found = q.options.find(opt => opt.text.trim() === q.answer.trim());
                             if (found) {
@@ -729,7 +739,6 @@
                             q.referenceAnswer = q.answer || '';
                         }
                     } else if (q.type === 'judge') {
-                        // 确保答案标准化
                         if (q.answer) {
                             q.answer = normalizeJudgeAnswer(q.answer);
                             q.referenceAnswer = q.answer;
@@ -739,7 +748,6 @@
                     } else {
                         q.referenceAnswer = q.answer || '';
                     }
-                    // 初始化userAnswer
                     if (q.type === 'multi' && !Array.isArray(q.userAnswer)) {
                         q.userAnswer = [];
                     }
@@ -761,7 +769,7 @@
                 return map[type] || type;
             },
 
-            // -------- 判题核心（判断题已标准化） ----------
+            // -------- 判题核心 ----------
             judgeQuestion(q) {
                 if (q.type === 'single') {
                     q.isCorrect = (q.userAnswer === q.answer);
@@ -771,7 +779,6 @@
                     const ans = [...q.answer].sort();
                     q.isCorrect = (ua.length === ans.length && ua.every((v, i) => v === ans[i]));
                 } else if (q.type === 'judge') {
-                    // 用户选择的值就是 "正确" 或 "错误"，直接比较
                     q.isCorrect = (q.userAnswer === q.answer);
                 } else if (q.type === 'fill') {
                     if (q.userAnswer && q.answer) {
@@ -784,7 +791,7 @@
                 }
             },
 
-            // -------- 单刷自动触发 ----------
+            // -------- 自动判题（单选/判断/填空） ----------
             onAnswerChange() {
                 const q = this.currentQ;
                 if (!q) return;
@@ -793,6 +800,16 @@
                     q.isCorrect = undefined;
                     return;
                 }
+                if (q.type === 'multi') return;
+                this.judgeQuestion(q);
+                q.showAnswer = true;
+            },
+
+            // -------- 手动确认多选题 ----------
+            confirmMultiAnswer() {
+                const q = this.currentQ;
+                if (!q || q.type !== 'multi') return;
+                if (q.showAnswer) return;
                 this.judgeQuestion(q);
                 q.showAnswer = true;
             },
