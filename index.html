@@ -1,861 +1,1086 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>葵花宝典 · 单刷+全览</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>C++ 刷题 · 单题模式</title>
+    <!-- mammoth.js 用于解析 docx -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js">
+    </script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        /* ===== 全局重置 & 变量 ===== */
+        :root {
+            --primary: #4f6ef7;
+            --primary-light: #e8ecff;
+            --primary-dark: #3a56d4;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --gray-50: #f8f9fc;
+            --gray-100: #f1f2f6;
+            --gray-200: #e2e5ed;
+            --gray-300: #c5c9d6;
+            --gray-600: #6b7280;
+            --gray-800: #2d3748;
+            --gray-900: #1a202c;
+            --shadow: 0 12px 40px rgba(79, 110, 247, 0.12);
+            --radius: 16px;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            background: #f3efe6;
-            font-family: 'Segoe UI', '华文楷体', 'KaiTi', 'Microsoft YaHei', sans-serif;
-            padding: 1.2rem 0.8rem;
-            color: #2d2a24;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-900);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
         }
-        .container {
-            max-width: 1100px;
+
+        .app {
+            width: 100%;
+            max-width: 820px;
             margin: 0 auto;
-            background: #fcf9f2;
-            border-radius: 32px;
-            padding: 1.6rem 1.8rem;
-            box-shadow: 0 12px 28px rgba(0,0,0,0.08);
-            border: 1px solid #e3d8c6;
+            background: #fff;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            min-height: 560px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
         }
-        h1 {
-            font-size: 1.8rem;
+
+        .app-header {
+            padding: 22px 30px 16px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            background: #fff;
+        }
+        .app-header h1 {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            background: linear-gradient(135deg, var(--primary), #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .app-header .stats {
+            font-size: 14px;
+            color: var(--gray-600);
+            background: var(--gray-100);
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-weight: 500;
+        }
+        .app-header .stats strong {
+            color: var(--gray-900);
+        }
+
+        .upload-zone {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 50px 30px 60px;
             text-align: center;
-            font-weight: 400;
-            color: #4d3e2e;
-            border-bottom: 2px dashed #d6c9b4;
-            padding-bottom: 0.4rem;
-            letter-spacing: 4px;
-            margin-bottom: 1.2rem;
+            transition: var(--transition);
+            background: #fff;
         }
-        h1 small { font-size: 0.9rem; display: block; font-weight: 300; color: #7a6852; }
-        .upload-area {
-            background: #f0eadc;
-            border-radius: 60px;
-            padding: 0.6rem 1.6rem;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: center;
-            gap: 0.8rem 1.6rem;
-            margin-bottom: 1.4rem;
-            border: 1px solid #cfc0aa;
+        .upload-zone .icon {
+            font-size: 56px;
+            margin-bottom: 16px;
+            opacity: 0.7;
         }
-        .upload-area label {
-            background: #8f7b62;
-            color: white;
-            padding: 0.3rem 1.6rem;
+        .upload-zone h2 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--gray-800);
+        }
+        .upload-zone p {
+            color: var(--gray-600);
+            font-size: 15px;
+            max-width: 400px;
+            margin-bottom: 24px;
+        }
+        .upload-zone .btn-upload {
+            display: inline-block;
+            background: var(--primary);
+            color: #fff;
+            padding: 12px 36px;
             border-radius: 40px;
+            font-weight: 600;
+            font-size: 15px;
             cursor: pointer;
-            transition: 0.2s;
-            border: 1px solid #6f5d48;
-            font-size: 0.95rem;
+            transition: var(--transition);
+            border: none;
+            box-shadow: 0 4px 14px rgba(79, 110, 247, 0.30);
         }
-        .upload-area label:hover { background: #7a6852; }
-        .upload-area input[type="file"] { display: none; }
-        .upload-area .hint { color: #5f4d38; font-size: 0.9rem; }
-        .status-msg { color: #4d6b4d; font-weight: 500; font-size: 0.9rem; }
+        .upload-zone .btn-upload:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(79, 110, 247, 0.35);
+        }
+        .upload-zone .btn-upload:active {
+            transform: scale(0.97);
+        }
+        .upload-zone .hint {
+            margin-top: 18px;
+            font-size: 13px;
+            color: var(--gray-300);
+        }
+        .upload-zone.drag-over {
+            background: var(--primary-light);
+            border: 2px dashed var(--primary);
+            border-radius: var(--radius);
+        }
 
-        .mode-bar {
+        .quiz-area {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            padding: 24px 30px 20px;
+            background: #fff;
+        }
+        .quiz-area.active {
             display: flex;
+        }
+
+        .progress-wrap {
+            width: 100%;
+            height: 4px;
+            background: var(--gray-200);
+            border-radius: 4px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .progress-wrap .bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), #8b5cf6);
+            border-radius: 4px;
+            transition: width 0.35s ease;
+            width: 0%;
+        }
+
+        .question-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 14px;
             flex-wrap: wrap;
+            gap: 6px;
+        }
+        .question-meta .qnum {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--primary);
+            background: var(--primary-light);
+            padding: 2px 16px;
+            border-radius: 30px;
+        }
+        .question-meta .qtype {
+            font-size: 13px;
+            color: var(--gray-600);
+            background: var(--gray-100);
+            padding: 2px 14px;
+            border-radius: 30px;
+        }
+
+        .question-text {
+            font-size: 17px;
+            line-height: 1.7;
+            margin-bottom: 22px;
+            padding: 8px 0 4px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .question-text code {
+            background: var(--gray-100);
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.9em;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+        .options .opt {
+            display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 0.6rem 1.6rem;
-            margin-bottom: 1.2rem;
-            background: #f4efe4;
-            padding: 0.4rem 1.2rem;
-            border-radius: 60px;
-            border: 1px solid #ddd0bb;
+            gap: 12px;
+            padding: 12px 18px;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            background: #fff;
+            font-size: 15px;
+            line-height: 1.5;
         }
-        .mode-bar .mode-label { font-weight: 500; color: #5f4d38; font-size: 0.9rem; }
-        .mode-btn {
-            background: transparent; border: none; padding: 0.3rem 1.4rem;
-            border-radius: 40px; font-size: 0.9rem; font-weight: 500;
-            cursor: pointer; transition: 0.15s; color: #5f4d38;
-            border: 1px solid transparent;
+        .options .opt:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
         }
-        .mode-btn.active { background: #8f7b62; color: white; border-color: #6f5d48; }
-        .mode-btn:not(.active):hover { background: #e6dbca; }
-        .score-box {
-            text-align: center; font-size: 1.1rem; background: #e8dfce;
-            padding: 0.2rem 1.8rem; border-radius: 60px;
-            display: inline-block; margin: 0 auto 0.8rem auto;
+        .options .opt .label {
+            font-weight: 600;
+            color: var(--gray-600);
+            min-width: 24px;
+        }
+        .options .opt.selected {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+        .options .opt.correct {
+            border-color: var(--success);
+            background: #eafaf1;
+        }
+        .options .opt.correct .label {
+            color: var(--success);
+        }
+        .options .opt.wrong {
+            border-color: var(--danger);
+            background: #fdedec;
+        }
+        .options .opt.wrong .label {
+            color: var(--danger);
+        }
+        .options .opt.reveal-correct {
+            border-color: var(--success);
+            background: #eafaf1;
+        }
+        .options .opt.reveal-correct .label {
+            color: var(--success);
+        }
+        .options .opt.disabled {
+            cursor: default;
+            opacity: 0.85;
+        }
+        .options .opt.disabled:hover {
+            border-color: var(--gray-200);
+            background: #fff;
+        }
+        .options .opt.disabled.selected:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+        .options .opt.disabled.correct:hover {
+            border-color: var(--success);
+            background: #eafaf1;
+        }
+        .options .opt.disabled.wrong:hover {
+            border-color: var(--danger);
+            background: #fdedec;
         }
 
-        /* 单刷模式 */
-        .single-area { min-height: 300px; }
-        .progress-bar {
-            display: flex; justify-content: space-between; align-items: center;
-            flex-wrap: wrap; gap: 0.4rem 1rem; margin-bottom: 0.8rem;
-            background: #f4efe4; padding: 0.3rem 1.2rem; border-radius: 60px;
-        }
-        .progress-text { font-weight: 500; color: #4d3e2e; font-size: 0.95rem; }
-        .progress-dots { display: flex; gap: 4px; flex-wrap: wrap; }
-        .dot {
-            width: 16px; height: 16px; border-radius: 50%;
-            background: #e6dbca; border: 1px solid #cebea6;
-            transition: 0.2s; cursor: pointer;
-        }
-        .dot.active { background: #8f7b62; border-color: #6f5d48; transform: scale(1.1); }
-        .dot.done-correct { background: #5f7a5f; border-color: #4a624a; }
-        .dot.done-wrong { background: #b13b3b; border-color: #8f2f2f; }
-        .dot.done-show { background: #b8a182; border-color: #9a8b78; }
-
-        .question-card {
-            background: #fcf9f2; border-radius: 20px; padding: 1.2rem 1.6rem;
-            border: 1px solid #e3d8c6; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            margin-bottom: 1rem;
-        }
-        .q-header {
-            display: flex; justify-content: space-between; flex-wrap: wrap;
-            align-items: baseline; margin-bottom: 0.3rem;
-        }
-        .q-title {
-            font-weight: 600; font-size: 1.05rem; background: #f0eadc;
-            padding: 0.05rem 1.2rem; border-radius: 30px; color: #3d3226;
-        }
-        .q-type {
-            font-size: 0.8rem; color: #7a6852; background: #e8dfce;
-            padding: 0.05rem 1rem; border-radius: 30px;
-        }
-        .q-text {
-            font-size: 1rem; line-height: 1.7; margin: 0.5rem 0 0.4rem 0;
-            padding-left: 0.8rem; border-left: 4px solid #bfaa8a;
-            background: #fcf9f2; padding: 0.2rem 0.5rem 0.2rem 1rem;
-            white-space: pre-wrap;
-        }
-        .q-options { padding-left: 1.2rem; margin: 0.3rem 0; }
-        .q-options label {
-            display: block; margin: 0.2rem 0; cursor: pointer;
-            padding: 0.1rem 0.4rem; border-radius: 10px;
-        }
-        .q-options label:hover { background: #f2ecdf; }
-        .q-options input[type="radio"],
-        .q-options input[type="checkbox"] {
-            margin-right: 10px; accent-color: #7f6b50; transform: scale(1.05);
-        }
         .judge-group {
-            padding-left: 1.2rem; display: flex; gap: 1.8rem; flex-wrap: wrap;
-            margin: 0.3rem 0;
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
         }
-        .judge-group label {
-            display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
-            background: #f4efe4; padding: 0.1rem 1rem; border-radius: 30px;
-            border: 1px solid #ddd0bb;
+        .judge-group .jbtn {
+            flex: 1;
+            min-width: 100px;
+            padding: 14px 20px;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            background: #fff;
+            color: var(--gray-600);
         }
-        .judge-group input[type="radio"] { accent-color: #7f6b50; }
-        .fill-input {
-            margin: 0.3rem 0 0.2rem 1.2rem; padding: 0.3rem 1rem;
-            border: 1px solid #d6c9b4; border-radius: 30px; min-width: 220px;
-            font-size: 1rem; background: #fefcf7;
+        .judge-group .jbtn:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
         }
-        .fill-input:focus { outline: 2px solid #b8a182; border-color: transparent; }
-        textarea {
-            width: 100%; max-width: 700px; padding: 0.5rem; border-radius: 16px;
-            border: 1px solid #d6c9b4; background: #fefcf7; margin: 0.3rem 0 0.2rem 0;
-            font-family: inherit;
+        .judge-group .jbtn.selected-true {
+            border-color: var(--success);
+            background: #eafaf1;
+            color: var(--success);
         }
-        .answer-feedback {
-            margin-top: 0.8rem; padding: 0.6rem 1.2rem; border-radius: 16px;
-            background: #f4efe4; border-left: 4px solid #bfaa8a;
-            display: flex; flex-wrap: wrap; align-items: center;
-            gap: 0.6rem 1.2rem;
+        .judge-group .jbtn.selected-false {
+            border-color: var(--danger);
+            background: #fdedec;
+            color: var(--danger);
         }
-        .answer-feedback .ref-label { font-weight: 500; color: #4d3e2e; }
-        .answer-feedback .ref-content {
-            background: #fcf9f2; padding: 0.1rem 1rem; border-radius: 30px;
-            border: 1px solid #d6c9b4; font-size: 0.95rem;
+        .judge-group .jbtn.reveal-true {
+            border-color: var(--success);
+            background: #eafaf1;
+            color: var(--success);
         }
-        .answer-feedback .result-tag {
-            font-weight: 600; padding: 0.05rem 1.2rem; border-radius: 30px;
-            font-size: 0.9rem;
+        .judge-group .jbtn.reveal-false {
+            border-color: var(--danger);
+            background: #fdedec;
+            color: var(--danger);
         }
-        .result-tag.correct { background: #5f7a5f; color: white; }
-        .result-tag.wrong { background: #b13b3b; color: white; }
-        .result-tag.pending { background: #b8a182; color: white; }
-
-        .single-actions {
-            display: flex; flex-wrap: wrap; gap: 0.6rem 1rem;
-            margin: 0.6rem 0 0.2rem 0; justify-content: center;
+        .judge-group .jbtn.disabled {
+            cursor: default;
+            opacity: 0.85;
         }
-        .btn {
-            background: #e6dbca; border: none; padding: 0.4rem 1.8rem;
-            border-radius: 40px; font-size: 0.95rem; font-weight: 500;
-            color: #3b3126; cursor: pointer; transition: 0.15s;
-            border: 1px solid #cebea6;
+        .judge-group .jbtn.disabled:hover {
+            border-color: var(--gray-200);
+            background: #fff;
         }
-        .btn:hover { background: #dacfbc; }
-        .btn-primary { background: #8f7b62; color: white; border-color: #6f5d48; }
-        .btn-primary:hover { background: #7a6852; }
-        .btn-success { background: #5f7a5f; color: white; border-color: #4a624a; }
-        .btn-success:hover { background: #4e6a4e; }
-        .btn-outline { background: transparent; border-color: #cebea6; }
-        .btn-outline:hover { background: #f0eadc; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        .nav-group {
-            display: flex; flex-wrap: wrap; gap: 0.6rem 1rem;
-            justify-content: center; margin-top: 0.8rem;
+        .judge-group .jbtn.disabled.selected-true:hover {
+            border-color: var(--success);
+            background: #eafaf1;
+        }
+        .judge-group .jbtn.disabled.selected-false:hover {
+            border-color: var(--danger);
+            background: #fdedec;
         }
 
-        /* 全部展示模式 */
-        .all-area .question-panel {
-            margin-bottom: 2rem; padding-bottom: 1rem;
-            border-bottom: 1px solid #e6dbca;
+        .feedback {
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 15px;
+            font-weight: 500;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            background: var(--gray-100);
+            color: var(--gray-800);
         }
-        .all-area .q-header {
-            display: flex; justify-content: space-between; flex-wrap: wrap;
-            align-items: baseline; margin-bottom: 0.3rem;
+        .feedback.show {
+            display: flex;
         }
-        .all-area .q-title {
-            font-weight: 600; font-size: 1.05rem; background: #f0eadc;
-            padding: 0.05rem 1.2rem; border-radius: 30px; color: #3d3226;
+        .feedback.correct {
+            background: #eafaf1;
+            color: #1a7a3a;
         }
-        .all-area .q-type {
-            font-size: 0.8rem; color: #7a6852; background: #e8dfce;
-            padding: 0.05rem 1rem; border-radius: 30px;
+        .feedback.wrong {
+            background: #fdedec;
+            color: #b03a2e;
         }
-        .all-area .q-text {
-            font-size: 1rem; line-height: 1.7; margin: 0.5rem 0 0.4rem 0;
-            padding-left: 0.8rem; border-left: 4px solid #bfaa8a;
-            background: #fcf9f2; padding: 0.2rem 0.5rem 0.2rem 1rem;
-            white-space: pre-wrap;
-        }
-        .all-area .q-options { padding-left: 1.2rem; margin: 0.3rem 0; }
-        .all-area .q-options label {
-            display: block; margin: 0.2rem 0; cursor: pointer;
-            padding: 0.1rem 0.4rem; border-radius: 10px;
-        }
-        .all-area .q-options label:hover { background: #f2ecdf; }
-        .all-area .q-options input[type="radio"],
-        .all-area .q-options input[type="checkbox"] {
-            margin-right: 10px; accent-color: #7f6b50; transform: scale(1.05);
-        }
-        .all-area .judge-group {
-            padding-left: 1.2rem; display: flex; gap: 1.8rem; flex-wrap: wrap;
-            margin: 0.3rem 0;
-        }
-        .all-area .judge-group label {
-            display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
-            background: #f4efe4; padding: 0.1rem 1rem; border-radius: 30px;
-            border: 1px solid #ddd0bb;
-        }
-        .all-area .judge-group input[type="radio"] { accent-color: #7f6b50; }
-        .all-area .fill-input {
-            margin: 0.3rem 0 0.2rem 1.2rem; padding: 0.3rem 1rem;
-            border: 1px solid #d6c9b4; border-radius: 30px; min-width: 220px;
-            font-size: 1rem; background: #fefcf7;
-        }
-        .all-area .fill-input:focus { outline: 2px solid #b8a182; border-color: transparent; }
-        .all-area textarea {
-            width: 100%; max-width: 700px; padding: 0.5rem; border-radius: 16px;
-            border: 1px solid #d6c9b4; background: #fefcf7; margin: 0.3rem 0 0.2rem 0;
-            font-family: inherit;
-        }
-        .all-area .ref-answer {
-            margin-top: 0.3rem; font-size: 0.9rem; background: #f0eadc;
-            padding: 0.05rem 1rem; border-radius: 30px; display: inline-block;
-            border: 1px solid #d8cbb6;
-        }
-        .all-area .correct-tag { color: #2e6b2e; font-weight: 500; margin-left: 0.5rem; }
-        .all-area .wrong-tag { color: #b13b3b; font-weight: 500; margin-left: 0.5rem; }
-
-        .all-actions {
-            display: flex; flex-wrap: wrap; gap: 0.6rem 1.2rem;
-            justify-content: center; margin: 1rem 0 1.6rem 0;
+        .feedback .ans {
+            font-weight: 700;
+            margin-left: auto;
+            padding: 2px 14px;
+            background: rgba(0, 0, 0, 0.06);
+            border-radius: 30px;
         }
 
-        .empty-state {
-            text-align: center; padding: 2.4rem 0.8rem; color: #9a8b78;
+        .action-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 6px;
+            padding-top: 16px;
+            border-top: 1px solid var(--gray-200);
+            flex-wrap: wrap;
         }
-        .empty-state .big-icon { font-size: 3rem; margin-bottom: 0.6rem; }
-        .empty-state p { font-size: 1rem; }
+        .action-bar .nav-group {
+            display: flex;
+            gap: 8px;
+        }
+        .action-bar button {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--gray-100);
+            color: var(--gray-800);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .action-bar button:hover:not(:disabled) {
+            background: var(--gray-200);
+        }
+        .action-bar button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .action-bar .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+        .action-bar .btn-primary:hover:not(:disabled) {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+        .action-bar .btn-success {
+            background: var(--success);
+            color: #fff;
+        }
+        .action-bar .btn-success:hover:not(:disabled) {
+            background: #27ae60;
+        }
+        .action-bar .btn-outline {
+            background: transparent;
+            border: 2px solid var(--gray-200);
+        }
+        .action-bar .btn-outline:hover:not(:disabled) {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
 
-        .footnote {
-            margin-top: 1.6rem; border-top: 1px solid #ede5d6;
-            padding-top: 0.8rem; text-align: right; color: #9a8b78;
-            font-size: 0.8rem;
+        @media (max-width: 640px) {
+            .app-header {
+                padding: 16px 18px 12px;
+            }
+            .app-header h1 {
+                font-size: 17px;
+            }
+            .upload-zone {
+                padding: 30px 18px 40px;
+            }
+            .upload-zone .icon {
+                font-size: 40px;
+            }
+            .upload-zone h2 {
+                font-size: 18px;
+            }
+            .quiz-area {
+                padding: 16px 18px 14px;
+            }
+            .question-text {
+                font-size: 15px;
+            }
+            .options .opt {
+                padding: 10px 14px;
+                font-size: 14px;
+            }
+            .action-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .action-bar .nav-group {
+                justify-content: center;
+            }
+            .action-bar button {
+                justify-content: center;
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+            .judge-group .jbtn {
+                min-width: 70px;
+                padding: 12px 10px;
+                font-size: 14px;
+            }
+            .question-meta .qnum {
+                font-size: 13px;
+            }
         }
 
-        @media (max-width: 700px) {
-            .container { padding: 0.8rem; }
-            .upload-area { flex-direction: column; align-items: stretch; padding: 0.8rem 1rem; }
-            .question-card { padding: 0.8rem 1rem; }
-            .q-text { padding-left: 0.4rem; padding-right: 0.2rem; }
-            .progress-dots .dot { width: 12px; height: 12px; }
-            .mode-bar { padding: 0.3rem 0.8rem; gap: 0.4rem 0.8rem; }
-            .mode-btn { padding: 0.2rem 0.8rem; font-size: 0.8rem; }
-            .single-actions .btn, .nav-group .btn, .all-actions .btn { padding: 0.3rem 1.2rem; font-size: 0.85rem; }
-            .fill-input { min-width: 140px; width: 100%; }
-            textarea { max-width: 100%; }
+        .hidden {
+            display: none !important;
         }
-        @media (max-width: 480px) {
-            h1 { font-size: 1.4rem; }
-            .q-title { font-size: 0.95rem; padding: 0.05rem 0.8rem; }
-            .q-type { font-size: 0.7rem; padding: 0.05rem 0.6rem; }
-            .progress-text { font-size: 0.8rem; }
-            .dot { width: 10px; height: 10px; }
-            .answer-feedback { flex-direction: column; align-items: flex-start; padding: 0.5rem 0.8rem; }
+        .mt-2 {
+            margin-top: 8px;
+        }
+        .text-center {
+            text-align: center;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--gray-200);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .app::-webkit-scrollbar {
+            width: 4px;
+        }
+        .app::-webkit-scrollbar-track {
+            background: var(--gray-100);
+        }
+        .app::-webkit-scrollbar-thumb {
+            background: var(--gray-300);
+            border-radius: 8px;
         }
     </style>
 </head>
 <body>
-<div class="container" id="app">
-    <h1>📜 葵花宝典 · 刷题卷 <small>Java 期末预习 · 单刷+全览 · 支持E选项</small></h1>
 
-    <div class="upload-area">
-        <span class="hint">📤 上传 .docx 题库 (自动识别)</span>
-        <label for="fileInput">选择文件</label>
-        <input type="file" id="fileInput" accept=".docx" @change="handleFileUpload">
-        <span v-if="uploadStatus" class="status-msg">✅ {{ uploadStatus }}</span>
-    </div>
+<div class="app" id="app">
+    <!-- ===== 头部 ===== -->
+    <header class="app-header">
+        <h1>📘 C++ 刷题 · 单题模式</h1>
+        <span class="stats" id="statsLabel">📄 上传 docx 开始</span>
+    </header>
 
-    <div class="mode-bar">
-        <span class="mode-label">📌 模式：</span>
-        <button class="mode-btn" :class="{ active: mode === 'single' }" @click="mode = 'single'">🎯 单刷</button>
-        <button class="mode-btn" :class="{ active: mode === 'all' }" @click="mode = 'all'">📋 全部展示</button>
-        <span style="color:#9a8b78;font-size:0.8rem;margin-left:0.4rem;" v-if="questions.length">
-            共 {{ questions.length }} 题
-        </span>
-    </div>
+    <!-- ===== 上传区域 ===== -->
+    <section class="upload-zone" id="uploadZone">
+        <div class="icon">📂</div>
+        <h2>上传 C++ 复习题文档</h2>
+        <p>支持 <strong>.docx</strong> 格式，自动识别选择题 &amp; 判断题</p>
+        <button class="btn-upload" id="uploadBtn">选择文件</button>
+        <input type="file" id="fileInput" accept=".docx" style="display:none" />
+        <div class="hint">或直接拖拽文件到此处</div>
+    </section>
 
-    <div style="text-align:center;">
-        <span class="score-box">📊 得分：{{ score }} / {{ answeredCount || questions.length }}</span>
-    </div>
-
-    <!-- ========== 单刷模式 ========== -->
-    <div v-if="mode === 'single'" class="single-area">
-        <div v-if="questions.length === 0" class="empty-state">
-            <div class="big-icon">📖</div>
-            <p>暂无题目，请上传 .docx 题库文件</p>
-        </div>
-        <div v-else>
-            <div class="progress-bar">
-                <span class="progress-text">第 {{ currentIndex + 1 }} / {{ questions.length }} 题</span>
-                <div class="progress-dots">
-                    <span v-for="(q, idx) in questions" :key="idx" class="dot"
-                    :class="{
-                        active: idx === currentIndex,
-                        'done-correct': q.showAnswer && q.isCorrect === true,
-                        'done-wrong': q.showAnswer && q.isCorrect === false,
-                        'done-show': q.showAnswer && q.isCorrect === undefined
-                    }"
-                    @click="goTo(idx)"></span>
-                </div>
-            </div>
-
-            <div class="question-card">
-                <div class="q-header">
-                    <span class="q-title">#{{ currentIndex + 1 }}</span>
-                    <span class="q-type">{{ currentQ.typeName }}</span>
-                </div>
-                <div class="q-text" v-html="currentQ.text"></div>
-
-                <!-- 单选题 -->
-                <div v-if="currentQ.type === 'single'" class="q-options">
-                    <label v-for="opt in currentQ.options" :key="opt.letter">
-                        <input type="radio" :name="'single_'+currentIndex" :value="opt.letter" v-model="currentQ.userAnswer" @change="onAnswerChange">
-                        {{ opt.letter + '. ' + opt.text }}
-                    </label>
-                </div>
-
-                <!-- 多选题（手动确认） -->
-                <div v-else-if="currentQ.type === 'multi'" class="q-options">
-                    <label v-for="opt in currentQ.options" :key="opt.letter">
-                        <input type="checkbox" :value="opt.letter" v-model="currentQ.userAnswer">
-                        {{ opt.letter + '. ' + opt.text }}
-                    </label>
-                    <div style="font-size:0.8rem; color:#7f6e58; margin-top:0.1rem;">（多选，选完后点击“确认答案”判题）</div>
-                    <div style="margin-top:0.4rem;">
-                        <button class="btn btn-primary" @click="confirmMultiAnswer" :disabled="currentQ.showAnswer">✅ 确认答案</button>
-                    </div>
-                </div>
-
-                <!-- 判断题 -->
-                <div v-else-if="currentQ.type === 'judge'" class="judge-group">
-                    <label><input type="radio" :name="'judge_'+currentIndex" value="正确" v-model="currentQ.userAnswer" @change="onAnswerChange"> ✅ 正确</label>
-                    <label><input type="radio" :name="'judge_'+currentIndex" value="错误" v-model="currentQ.userAnswer" @change="onAnswerChange"> ❌ 错误</label>
-                </div>
-
-                <!-- 填空题 -->
-                <div v-else-if="currentQ.type === 'fill'">
-                    <input class="fill-input" type="text" v-model="currentQ.userAnswer" @input="onAnswerChange" placeholder="输入答案…">
-                </div>
-
-                <!-- 主观题 -->
-                <div v-else-if="currentQ.type === 'essay' || currentQ.type === 'coding' || currentQ.type === 'design'">
-                    <textarea v-model="currentQ.userAnswer" @input="onAnswerChange" rows="2" placeholder="在此输入你的答案…"></textarea>
-                </div>
-
-                <!-- 答案反馈 -->
-                <div v-if="currentQ.showAnswer" class="answer-feedback">
-                    <span class="ref-label">📌 参考答案：</span>
-                    <span class="ref-content" v-html="currentQ.referenceAnswer || '（无参考答案）'"></span>
-                    <span class="result-tag" :class="{
-                        correct: currentQ.isCorrect === true,
-                        wrong: currentQ.isCorrect === false,
-                        pending: currentQ.isCorrect === undefined
-                    }">
-                        <span v-if="currentQ.isCorrect === true">✔ 正确</span>
-                        <span v-else-if="currentQ.isCorrect === false">✘ 错误</span>
-                        <span v-else>⏳ 待评判</span>
-                    </span>
-                    <span v-if="currentQ.type === 'essay' || currentQ.type === 'coding' || currentQ.type === 'design'"
-                    style="font-size:0.8rem; color:#7a6852;">
-                    （主观题请自行对照）
-                </span>
-            </div>
-
-            <!-- 操作按钮 -->
-            <div class="single-actions">
-                <button class="btn btn-outline" @click="resetCurrent" v-if="currentQ.showAnswer">
-                    🔄 重做本题
-                </button>
-            </div>
+    <!-- ===== 刷题区域 ===== -->
+    <section class="quiz-area" id="quizArea">
+        <!-- 进度条 -->
+        <div class="progress-wrap">
+            <div class="bar" id="progressBar"></div>
         </div>
 
-        <!-- 导航 -->
-        <div class="nav-group">
-            <button class="btn" @click="prevQuestion" :disabled="currentIndex === 0">⬅ 上一题</button>
-            <button class="btn btn-primary" @click="nextQuestion" :disabled="currentIndex === questions.length - 1">下一题 ➡</button>
-            <button class="btn btn-success" @click="goTo(0)" :disabled="currentIndex === 0">⏮ 首题</button>
-            <button class="btn btn-success" @click="goTo(questions.length - 1)" :disabled="currentIndex === questions.length - 1">⏭ 末题</button>
+        <!-- 题目标题 -->
+        <div class="question-meta">
+            <span class="qnum" id="qnumLabel">第 1 题</span>
+            <span class="qtype" id="qtypeLabel">选择题</span>
         </div>
-    </div>
+
+        <!-- 题目内容 -->
+        <div class="question-text" id="questionText"></div>
+
+        <!-- 选项容器 (选择题) -->
+        <div class="options" id="optionsContainer"></div>
+
+        <!-- 判断题容器 -->
+        <div class="judge-group" id="judgeContainer"></div>
+
+        <!-- 反馈 -->
+        <div class="feedback" id="feedback">
+            <span id="feedbackIcon">✅</span>
+            <span id="feedbackText"></span>
+            <span class="ans" id="feedbackAnswer"></span>
+        </div>
+
+        <!-- 底部操作 -->
+        <div class="action-bar">
+            <div class="nav-group">
+                <button id="prevBtn" disabled>◀ 上一题</button>
+                <button id="nextBtn">下一题 ▶</button>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button class="btn-primary" id="revealBtn">💡 显示答案</button>
+                <button class="btn-outline" id="resetBtn">🔄 重置</button>
+            </div>
+        </div>
+    </section>
 </div>
 
-<!-- ========== 全部展示模式 ========== -->
-<div v-if="mode === 'all'" class="all-area">
-    <div v-if="questions.length === 0" class="empty-state">
-        <div class="big-icon">📖</div>
-        <p>暂无题目，请上传 .docx 题库文件</p>
-    </div>
-    <div v-else>
-        <div class="all-actions">
-            <button class="btn btn-primary" @click="checkAll">✅ 核对答案</button>
-            <button class="btn btn-success" @click="toggleShowAllRef">📖 {{ showAllRef ? '隐藏' : '显示' }}参考答案</button>
-            <button class="btn btn-outline" @click="resetAll">🔄 重置全部</button>
-        </div>
-
-        <div v-for="(q, idx) in questions" :key="idx" class="question-panel">
-            <div class="q-header">
-                <span class="q-title">#{{ idx+1 }}</span>
-                <span class="q-type">{{ q.typeName }}</span>
-            </div>
-            <div class="q-text" v-html="q.text"></div>
-
-            <div v-if="q.type === 'single'" class="q-options">
-                <label v-for="opt in q.options" :key="opt.letter">
-                    <input type="radio" :name="'all_single_'+idx" :value="opt.letter" v-model="q.userAnswer">
-                    {{ opt.letter + '. ' + opt.text }}
-                </label>
-            </div>
-
-            <div v-else-if="q.type === 'multi'" class="q-options">
-                <label v-for="opt in q.options" :key="opt.letter">
-                    <input type="checkbox" :value="opt.letter" v-model="q.userAnswer">
-                    {{ opt.letter + '. ' + opt.text }}
-                </label>
-                <div style="font-size:0.8rem; color:#7f6e58; margin-top:0.1rem;">（多选）</div>
-            </div>
-
-            <div v-else-if="q.type === 'judge'" class="judge-group">
-                <label><input type="radio" :name="'all_judge_'+idx" value="正确" v-model="q.userAnswer"> ✅ 正确</label>
-                <label><input type="radio" :name="'all_judge_'+idx" value="错误" v-model="q.userAnswer"> ❌ 错误</label>
-            </div>
-
-            <div v-else-if="q.type === 'fill'">
-                <input class="fill-input" type="text" v-model="q.userAnswer" placeholder="输入答案…">
-            </div>
-
-            <div v-else-if="q.type === 'essay' || q.type === 'coding' || q.type === 'design'">
-                <textarea v-model="q.userAnswer" rows="2" placeholder="在此输入你的答案…"></textarea>
-            </div>
-
-            <div v-if="showAllRef && q.referenceAnswer" class="ref-answer">
-                📌 参考答案：<span v-html="q.referenceAnswer"></span>
-            </div>
-            <div v-if="q.isCorrect !== undefined && !showAllRef" style="margin-top:0.2rem;">
-                <span v-if="q.isCorrect === true" class="correct-tag">✔ 正确</span>
-                <span v-else-if="q.isCorrect === false" class="wrong-tag">✘ 错误</span>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="footnote">📖 整理于2026 · 葵花宝典 · 支持A-E选项 · 上传docx自动识别</div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
 <script>
-    new Vue({
-        el: '#app',
-        data: {
-            questions: [],
-            mode: 'single',
-            currentIndex: 0,
-            showAllRef: false,
-            uploadStatus: '',
-            rawText: ''
-        },
-        computed: {
-            currentQ() {
-                return this.questions[this.currentIndex] || {};
-            },
-            score() {
-                let s = 0;
-                this.questions.forEach(q => {
-                    if (q.isCorrect === true) s += 1;
-                });
-                return s;
-            },
-            answeredCount() {
-                let c = 0;
-                this.questions.forEach(q => {
-                    if (q.showAnswer || q.isCorrect !== undefined) c += 1;
-                });
-                return c || 0;
+    // ============================================================
+    // 1. 核心数据
+    // ============================================================
+    let questions = [];
+    let currentIndex = 0;
+    let revealed = false;
+
+    const $ = (id) => document.getElementById(id);
+    const uploadZone = $('uploadZone');
+    const quizArea = $('quizArea');
+    const fileInput = $('fileInput');
+    const uploadBtn = $('uploadBtn');
+    const statsLabel = $('statsLabel');
+    const progressBar = $('progressBar');
+    const qnumLabel = $('qnumLabel');
+    const qtypeLabel = $('qtypeLabel');
+    const questionText = $('questionText');
+    const optionsContainer = $('optionsContainer');
+    const judgeContainer = $('judgeContainer');
+    const feedback = $('feedback');
+    const feedbackIcon = $('feedbackIcon');
+    const feedbackText = $('feedbackText');
+    const feedbackAnswer = $('feedbackAnswer');
+    const prevBtn = $('prevBtn');
+    const nextBtn = $('nextBtn');
+    const revealBtn = $('revealBtn');
+    const resetBtn = $('resetBtn');
+
+    // ============================================================
+    // 2. 解析器 (改进版，支持分号分隔的选项)
+    // ============================================================
+    function parseQuestions(text) {
+        const lines = text.split(/\r?\n/);
+        const result = [];
+        let i = 0;
+        const total = lines.length;
+
+        while (i < total) {
+            let line = lines[i].trim();
+            if (!line) { i++; continue; }
+
+            // 匹配题号
+            const match = line.match(/^(\d+)[\.、\s]+/);
+            if (!match) { i++; continue; }
+
+            const id = parseInt(match[1], 10);
+            let content = line.replace(/^\d+[\.、\s]+/, '').trim();
+            let options = [];
+            let answer = '';
+            let type = 'choice';
+
+            // 收集后续行直到遇到下一个题号或"答案："
+            let contentLines = [content];
+            let j = i + 1;
+            while (j < total) {
+                const nextLine = lines[j].trim();
+                if (/^\d+[\.、\s]/.test(nextLine)) break;
+                if (/^答案[：:]\s*/.test(nextLine)) {
+                    const ansMatch = nextLine.match(/^答案[：:]\s*(.+)/);
+                    if (ansMatch) {
+                        answer = ansMatch[1].trim();
+                    }
+                    j++;
+                    break;
+                }
+                if (nextLine) contentLines.push(nextLine);
+                j++;
             }
-        },
-        methods: {
-            // -------- 文件上传 ----------
-            handleFileUpload(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-                this.uploadStatus = '解析中...';
-                const reader = new FileReader();
-                reader.onload = async (ev) => {
-                    try {
-                        const arrayBuffer = ev.target.result;
-                        const result = await mammoth.extractRawText({ arrayBuffer });
-                        const text = result.value;
-                        this.rawText = text;
-                        const parsed = this.parseQuestions(text);
-                        this.questions = parsed;
-                        this.currentIndex = 0;
-                        this.showAllRef = false;
-                        this.uploadStatus = `解析完成，共 ${parsed.length} 题`;
-                    } catch (err) {
-                        this.uploadStatus = '解析失败，请检查文件';
-                        console.error(err);
-                    }
-                };
-                reader.readAsArrayBuffer(file);
-            },
 
-            // -------- 解析核心（支持 A-E 选项） ----------
-            parseQuestions(text) {
-                const lines = text.split('\n');
-                const qs = [];
-                let current = null;
-                let sectionType = null;
+            let fullContent = contentLines.join('\n');
 
-                function detectSection(line) {
-                    if (/一、单项选择题/.test(line)) return 'single';
-                    if (/二、判断题/.test(line)) return 'judge';
-                    if (/三、填空题/.test(line)) return 'fill';
-                    if (/四、简答题/.test(line)) return 'essay';
-                    if (/五、编程题/.test(line)) return 'coding';
-                    if (/六、设计题/.test(line)) return 'design';
-                    return null;
+            // ---- 提取选项 ----
+            // 策略1：按标准选项行匹配（换行分割）
+            const optRegex = /([A-D])[、\.\)\:：]\s*([^\n]*)/g;
+            let optMatch;
+            let extractedOptions = [];
+            while ((optMatch = optRegex.exec(fullContent)) !== null) {
+                const label = optMatch[1];
+                const text = optMatch[2].trim();
+                if (text) {
+                    extractedOptions.push({ label, text });
                 }
-
-                // 判断是否是多选题（答案含多个字母，支持 A-E）
-                function isMultiAnswer(ans) {
-                    return /^[A-E]{2,}$/i.test(ans.trim());
-                }
-
-                function normalizeJudgeAnswer(ans) {
-                    if (!ans) return '';
-                    const trimmed = ans.trim();
-                    if (/^(正确|对|√|是|T|true)$/i.test(trimmed)) return '正确';
-                    if (/^(错误|错|×|否|F|false)$/i.test(trimmed)) return '错误';
-                    return trimmed;
-                }
-
-                for (let i = 0; i < lines.length; i++) {
-                    let line = lines[i].trim();
-                    if (!line) continue;
-
-                    const sec = detectSection(line);
-                    if (sec) {
-                        sectionType = sec;
-                        continue;
-                    }
-
-                    const matchNum = line.match(/^\*\*?(\d+)\.\*\*/) || line.match(/^(\d+)\./) || line.match(/^(\d+)、/);
-                    if (matchNum && sectionType) {
-                        if (current) {
-                            qs.push(current);
-                        }
-                        const num = parseInt(matchNum[1]);
-                        let textPart = line.replace(/^\*\*?\d+\.\*\*\s*/, '').replace(/^\d+\.\s*/, '').replace(/^\d+、\s*/, '');
-                        let answer = '';
-                        // 匹配答案，支持 A-E
-                        const ansMatch = textPart.match(/答案[：:]\s*([A-E]+)/);
-                        if (ansMatch) {
-                            answer = ansMatch[1].trim();
-                            textPart = textPart.replace(/答案[：:]\s*[A-E]+/, '').trim();
-                        }
-                        let type = sectionType;
-                        if (type === 'single' && answer && isMultiAnswer(answer)) {
-                            type = 'multi';
-                        }
-                        if (type === 'judge' && answer) {
-                            answer = normalizeJudgeAnswer(answer);
-                        }
-                        current = {
-                            id: num,
-                            type: type,
-                            typeName: this.getTypeName(type),
-                            text: textPart,
-                            options: [],
-                            answer: null,
-                            userAnswer: type === 'multi' ? [] : null,
-                            referenceAnswer: '',
-                            isCorrect: undefined,
-                            showAnswer: false
-                        };
-                        if (answer) {
-                            if (type === 'multi') {
-                                current.answer = answer.toUpperCase().split('');
-                                current.referenceAnswer = answer;
-                            } else {
-                                current.answer = answer;
-                                current.referenceAnswer = answer;
-                            }
-                        }
-                        continue;
-                    }
-
-                    if (!current) continue;
-
-                    // 选项匹配：支持 A-E
-                    const optMatch = line.match(/^([A-E])[\.\、\)]\s*(.*)/);
-                    if (optMatch && (current.type === 'single' || current.type === 'multi')) {
-                        const letter = optMatch[1];
-                        const text = optMatch[2];
-                        current.options.push({ letter, text });
-                        continue;
-                    }
-
-                    const ansLine = line.match(/^答案[：:]\s*(.+)/);
-                    if (ansLine) {
-                        let ans = ansLine[1].trim();
-                        if (current.type === 'judge') {
-                            ans = normalizeJudgeAnswer(ans);
-                        }
-                        // 如果当前是单选但答案是多字母（含 A-E），转为多选
-                        if (current.type === 'single' && isMultiAnswer(ans)) {
-                            current.type = 'multi';
-                            current.typeName = this.getTypeName('multi');
-                            if (!Array.isArray(current.userAnswer)) {
-                                current.userAnswer = [];
-                            }
-                            current.answer = ans.toUpperCase().split('');
-                            current.referenceAnswer = ans;
-                            continue;
-                        }
-                        if (current.type === 'multi') {
-                            if (/^[A-E]+$/i.test(ans)) {
-                                current.answer = ans.toUpperCase().split('');
-                                current.referenceAnswer = ans;
-                            } else {
-                                current.answer = ans;
-                                current.referenceAnswer = ans;
-                            }
-                        } else if (current.type === 'single') {
-                            if (/^[A-E]$/i.test(ans)) {
-                                current.answer = ans.toUpperCase();
-                                current.referenceAnswer = ans;
-                            } else {
-                                current.answer = ans;
-                                current.referenceAnswer = ans;
-                            }
-                        } else {
-                            current.answer = ans;
-                            current.referenceAnswer = ans;
-                        }
-                        continue;
-                    }
-
-                    if (current.type === 'fill') {
-                        const fillMatch = line.match(/^[答案|答][：:]\s*(.+)/);
-                        if (fillMatch) {
-                            current.answer = fillMatch[1].trim();
-                            current.referenceAnswer = fillMatch[1].trim();
-                            continue;
-                        }
-                    }
-
-                    if ((current.type === 'essay' || current.type === 'coding' || current.type === 'design')) {
-                        const subMatch = line.match(/^[答案|答][：:]\s*(.+)/);
-                        if (subMatch) {
-                            current.answer = subMatch[1].trim();
-                            current.referenceAnswer = subMatch[1].trim();
-                            continue;
-                        }
-                    }
-
-                    if (!/^[A-E]/.test(line) && !/^答案/.test(line) && !/^[一二三四五六]/.test(line)) {
-                        current.text += '<br>' + line;
+            }
+            if (extractedOptions.length === 4) {
+                options = extractedOptions;
+            } else {
+                // 策略2：将内容按分号（; 或 ；）分割，然后提取
+                const parts = fullContent.split(/[；;]\s*/);
+                let tempOpts = [];
+                for (const p of parts) {
+                    const m = p.match(/^([A-D])[、\.\)\:：]\s*(.*)/);
+                    if (m) {
+                        tempOpts.push({ label: m[1], text: m[2].trim() });
                     }
                 }
-
-                if (current) qs.push(current);
-
-                // 后处理
-                qs.forEach(q => {
-                    if (q.type === 'multi') {
-                        if (typeof q.answer === 'string' && /^[A-E]+$/i.test(q.answer)) {
-                            q.answer = q.answer.toUpperCase().split('');
-                            q.referenceAnswer = q.answer.join('');
-                        } else if (Array.isArray(q.answer)) {
-                            q.referenceAnswer = q.answer.join('');
-                        } else {
-                            q.answer = [];
-                            q.referenceAnswer = '';
-                        }
-                        if (!Array.isArray(q.userAnswer)) {
-                            q.userAnswer = [];
-                        }
-                    } else if (q.type === 'single') {
-                        if (typeof q.answer === 'string' && q.answer.length === 1 && /^[A-E]$/i.test(q.answer)) {
-                            // ok
-                        } else if (typeof q.answer === 'string' && q.answer.length > 1) {
-                            const found = q.options.find(opt => opt.text.trim() === q.answer.trim());
-                            if (found) {
-                                q.answer = found.letter;
-                                q.referenceAnswer = found.letter;
-                            } else {
-                                q.referenceAnswer = q.answer;
-                            }
-                        } else {
-                            q.referenceAnswer = q.answer || '';
-                        }
-                    } else if (q.type === 'judge') {
-                        if (q.answer) {
-                            q.answer = normalizeJudgeAnswer(q.answer);
-                            q.referenceAnswer = q.answer;
-                        } else {
-                            q.referenceAnswer = '';
-                        }
-                    } else {
-                        q.referenceAnswer = q.answer || '';
-                    }
-                    if (q.type === 'multi' && !Array.isArray(q.userAnswer)) {
-                        q.userAnswer = [];
-                    }
-                    if (q.type !== 'multi' && q.userAnswer === null) {
-                        q.userAnswer = null;
-                    }
-                    q.showAnswer = false;
-                    q.isCorrect = undefined;
-                });
-
-                return qs;
-            },
-
-            getTypeName(type) {
-                const map = {
-                    'single': '单选题', 'multi': '多选题', 'judge': '判断题',
-                    'fill': '填空题', 'essay': '简答题', 'coding': '编程题', 'design': '设计题'
-                };
-                return map[type] || type;
-            },
-
-            // -------- 判题核心 ----------
-            judgeQuestion(q) {
-                if (q.type === 'single') {
-                    q.isCorrect = (q.userAnswer === q.answer);
-                } else if (q.type === 'multi') {
-                    if (!q.userAnswer || !q.answer) { q.isCorrect = false; return; }
-                    const ua = [...q.userAnswer].sort();
-                    const ans = [...q.answer].sort();
-                    q.isCorrect = (ua.length === ans.length && ua.every((v, i) => v === ans[i]));
-                } else if (q.type === 'judge') {
-                    q.isCorrect = (q.userAnswer === q.answer);
-                } else if (q.type === 'fill') {
-                    if (q.userAnswer && q.answer) {
-                        q.isCorrect = q.userAnswer.trim().toLowerCase() === q.answer.trim().toLowerCase();
-                    } else {
-                        q.isCorrect = false;
-                    }
+                if (tempOpts.length === 4) {
+                    options = tempOpts;
                 } else {
-                    q.isCorrect = undefined;
+                    // 策略3：按换行再提取一次（有些选项可能每行一个，但行内有多余字符）
+                    const linesArr = fullContent.split('\n');
+                    let opts = [];
+                    for (const ln of linesArr) {
+                        const m = ln.trim().match(/^([A-D])[、\.\)\:：]\s*(.*)/);
+                        if (m) {
+                            opts.push({ label: m[1], text: m[2].trim() });
+                        }
+                    }
+                    if (opts.length === 4) {
+                        options = opts;
+                    } else {
+                        // 策略4：从整段中尝试提取（可能用分号但没用空格）
+                        const combined = fullContent.replace(/\s+/g, ' ');
+                        const regex = /([A-D])[、\.\)\:：]\s*([^；;]*?)(?=[A-D][、\.\)\:：]|$)/g;
+                        let m;
+                        let opts4 = [];
+                        while ((m = regex.exec(combined)) !== null) {
+                            const label = m[1];
+                            const text = m[2].trim();
+                            if (text) opts4.push({ label, text });
+                        }
+                        if (opts4.length === 4) options = opts4;
+                    }
                 }
-            },
+            }
 
-            // -------- 自动判题（单选/判断/填空） ----------
-            onAnswerChange() {
-                const q = this.currentQ;
-                if (!q) return;
-                if (q.type === 'essay' || q.type === 'coding' || q.type === 'design') {
-                    q.showAnswer = true;
-                    q.isCorrect = undefined;
-                    return;
+            // 如果选项仍为空，但答案是单个字母，可能是选择，补充默认选项
+            if (options.length === 0 && answer && /^[A-D]$/.test(answer.toUpperCase())) {
+                // 尝试从答案中提取选项文本（如果内容中有类似"A、..."）
+                const regex = /([A-D])[、\.\)\:：]\s*([^；;]*)/g;
+                let m;
+                let fallback = [];
+                while ((m = regex.exec(fullContent)) !== null) {
+                    const label = m[1];
+                    const text = m[2].trim();
+                    if (text) fallback.push({ label, text });
                 }
-                if (q.type === 'multi') return;
-                this.judgeQuestion(q);
-                q.showAnswer = true;
-            },
-
-            // -------- 手动确认多选题 ----------
-            confirmMultiAnswer() {
-                const q = this.currentQ;
-                if (!q || q.type !== 'multi') return;
-                if (q.showAnswer) return;
-                this.judgeQuestion(q);
-                q.showAnswer = true;
-            },
-
-            resetCurrent() {
-                const q = this.currentQ;
-                if (!q) return;
-                if (q.type === 'multi') q.userAnswer = [];
-                else q.userAnswer = null;
-                q.isCorrect = undefined;
-                q.showAnswer = false;
-            },
-
-            prevQuestion() {
-                if (this.currentIndex > 0) this.currentIndex--;
-            },
-            nextQuestion() {
-                if (this.currentIndex < this.questions.length - 1) this.currentIndex++;
-            },
-            goTo(idx) {
-                if (idx >= 0 && idx < this.questions.length) this.currentIndex = idx;
-            },
-
-            // -------- 全部展示 ----------
-            checkAll() {
-                this.questions.forEach(q => {
-                    this.judgeQuestion(q);
-                });
-            },
-            toggleShowAllRef() {
-                this.showAllRef = !this.showAllRef;
-                if (this.showAllRef) {
-                    this.questions.forEach(q => q.isCorrect = undefined);
+                if (fallback.length === 4) options = fallback;
+                else {
+                    options = [
+                        { label: 'A', text: '选项 A' },
+                        { label: 'B', text: '选项 B' },
+                        { label: 'C', text: '选项 C' },
+                        { label: 'D', text: '选项 D' }
+                    ];
                 }
-            },
-            resetAll() {
-                this.questions.forEach(q => {
-                    if (q.type === 'multi') q.userAnswer = [];
-                    else q.userAnswer = null;
-                    q.isCorrect = undefined;
-                    q.showAnswer = false;
-                });
-                this.showAllRef = false;
+            }
+
+            // 确定类型
+            if (options.length === 4) {
+                type = 'choice';
+                // 清理题目内容：移除选项部分
+                let pure = fullContent;
+                for (const opt of options) {
+                    const regex = new RegExp(`[${opt.label}][、\.\)\:：]\\s*${opt.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'g');
+                    pure = pure.replace(regex, '');
+                }
+                pure = pure.replace(/[；;]\s*/g, ''); // 移除多余分号
+                pure = pure.replace(/\n{2,}/g, '\n').trim();
+                content = pure || fullContent.replace(/[；;]\s*/g, '').trim();
+            } else {
+                // 判断是否为判断题
+                if (answer === '对' || answer === '错' || answer === '√' || answer === '×') {
+                    type = 'judge';
+                    if (answer === '√') answer = '对';
+                    if (answer === '×') answer = '错';
+                    content = fullContent;
+                } else {
+                    // 尝试从内容中判断
+                    if (/对/.test(fullContent) && !/错/.test(fullContent)) { type = 'judge'; answer = '对'; } 
+                    else if (/错/.test(fullContent) && !/对/.test(fullContent)) { type = 'judge'; answer = '错'; } 
+                    else {
+                        type = 'choice';
+                        if (options.length === 0) {
+                            options = [
+                                { label: 'A', text: '选项 A' },
+                                { label: 'B', text: '选项 B' },
+                                { label: 'C', text: '选项 C' },
+                                { label: 'D', text: '选项 D' }
+                            ];
+                        }
+                        content = fullContent;
+                    }
+                }
+            }
+
+            // 如果答案还没提取到，尝试从内容末尾提取
+            if (!answer) {
+                const ansMatch2 = fullContent.match(/答案[：:]\s*(.+)/);
+                if (ansMatch2) answer = ansMatch2[1].trim();
+            }
+
+            // 如果答案包含 'A' 'B' 'C' 'D' 且是单个字符，修正
+            if (answer && /^[A-D]$/.test(answer.toUpperCase())) {
+                type = 'choice';
+                if (options.length === 0) {
+                    const regex2 = /([A-D])[、\.\)\:：]\s*([^；;]*)/g;
+                    let m2;
+                    let opts2 = [];
+                    while ((m2 = regex2.exec(fullContent)) !== null) {
+                        if (m2[2].trim()) opts2.push({ label: m2[1], text: m2[2].trim() });
+                    }
+                    if (opts2.length === 4) options = opts2;
+                    else {
+                        options = [
+                            { label: 'A', text: '选项 A' },
+                            { label: 'B', text: '选项 B' },
+                            { label: 'C', text: '选项 C' },
+                            { label: 'D', text: '选项 D' }
+                        ];
+                    }
+                }
+            }
+
+            // 清理答案
+            answer = answer.replace(/^[：:]\s*/, '').trim();
+
+            result.push({
+                id,
+                type,
+                text: content.trim() || '（题目内容为空）',
+                options: options,
+                answer: answer || (type === 'choice' ? 'A' : '对'),
+                userAnswer: null,
+            });
+
+            i = j;
+        }
+
+        // 去重并排序
+        const seen = new Set();
+        const unique = [];
+        for (const q of result) {
+            if (!seen.has(q.id)) {
+                seen.add(q.id);
+                unique.push(q);
             }
         }
+        unique.sort((a, b) => a.id - b.id);
+        return unique;
+    }
+
+    // ============================================================
+    // 3. 渲染引擎
+    // ============================================================
+    function renderQuestion() {
+        if (!questions.length) return;
+        const q = questions[currentIndex];
+        if (!q) return;
+
+        const total = questions.length;
+        const pct = ((currentIndex + 1) / total * 100);
+        progressBar.style.width = pct + '%';
+        statsLabel.innerHTML = `<strong>${currentIndex + 1}</strong> / ${total} 题`;
+        qnumLabel.textContent = `第 ${q.id || currentIndex + 1} 题`;
+        qtypeLabel.textContent = q.type === 'choice' ? '选择题' : '判断题';
+
+        questionText.textContent = q.text;
+
+        feedback.classList.remove('show', 'correct', 'wrong');
+        feedbackText.textContent = '';
+        revealed = false;
+
+        if (q.type === 'choice') {
+            optionsContainer.style.display = 'flex';
+            judgeContainer.style.display = 'none';
+            optionsContainer.innerHTML = '';
+            const labels = ['A', 'B', 'C', 'D'];
+            for (let i = 0; i < 4; i++) {
+                const opt = q.options[i] || { label: labels[i], text: '选项' + labels[i] };
+                const div = document.createElement('div');
+                div.className = 'opt';
+                if (q.userAnswer === opt.label) {
+                    div.classList.add('selected');
+                }
+                div.dataset.label = opt.label;
+                div.innerHTML = `<span class="label">${opt.label}.</span><span>${opt.text}</span>`;
+                div.addEventListener('click', () => onOptionClick(opt.label));
+                optionsContainer.appendChild(div);
+            }
+        } else {
+            optionsContainer.style.display = 'none';
+            judgeContainer.style.display = 'flex';
+            judgeContainer.innerHTML = '';
+            const trueBtn = document.createElement('button');
+            trueBtn.className = 'jbtn';
+            if (q.userAnswer === '对') trueBtn.classList.add('selected-true');
+            trueBtn.textContent = '✅ 对';
+            trueBtn.dataset.value = '对';
+            trueBtn.addEventListener('click', () => onJudgeClick('对'));
+
+            const falseBtn = document.createElement('button');
+            falseBtn.className = 'jbtn';
+            if (q.userAnswer === '错') falseBtn.classList.add('selected-false');
+            falseBtn.textContent = '❌ 错';
+            falseBtn.dataset.value = '错';
+            falseBtn.addEventListener('click', () => onJudgeClick('错'));
+
+            judgeContainer.appendChild(trueBtn);
+            judgeContainer.appendChild(falseBtn);
+        }
+
+        prevBtn.disabled = currentIndex === 0;
+        nextBtn.disabled = currentIndex === questions.length - 1;
+        nextBtn.textContent = currentIndex === questions.length - 1 ? '完成 🎉' : '下一题 ▶';
+
+        if (q.userAnswer) {
+            revealAnswer();
+        }
+    }
+
+    // ============================================================
+    // 4. 交互逻辑
+    // ============================================================
+    function onOptionClick(label) {
+        if (revealed) return;
+        const q = questions[currentIndex];
+        if (!q || q.type !== 'choice') return;
+        q.userAnswer = label;
+        renderQuestion();
+        revealAnswer();
+    }
+
+    function onJudgeClick(value) {
+        if (revealed) return;
+        const q = questions[currentIndex];
+        if (!q || q.type !== 'judge') return;
+        q.userAnswer = value;
+        renderQuestion();
+        revealAnswer();
+    }
+
+    function revealAnswer() {
+        const q = questions[currentIndex];
+        if (!q) return;
+        if (!q.userAnswer) {
+            feedback.classList.add('show');
+            feedback.className = 'feedback show';
+            feedbackIcon.textContent = '💡';
+            feedbackText.textContent = '请先选择一个答案';
+            feedbackAnswer.textContent = '';
+            return;
+        }
+        revealed = true;
+        const isCorrect = q.userAnswer === q.answer;
+
+        if (q.type === 'choice') {
+            const items = optionsContainer.querySelectorAll('.opt');
+            items.forEach(el => {
+                el.classList.add('disabled');
+                const label = el.dataset.label;
+                if (label === q.answer) {
+                    el.classList.add('reveal-correct');
+                }
+                if (label === q.userAnswer && !isCorrect) {
+                    el.classList.add('wrong');
+                }
+                if (label === q.userAnswer && isCorrect) {
+                    el.classList.add('correct');
+                }
+            });
+        } else {
+            const btns = judgeContainer.querySelectorAll('.jbtn');
+            btns.forEach(el => {
+                el.classList.add('disabled');
+                const val = el.dataset.value;
+                if (val === q.answer) {
+                    el.classList.add('reveal-true');
+                }
+                if (val === q.userAnswer && !isCorrect) {
+                    el.classList.add('selected-false');
+                }
+                if (val === q.userAnswer && isCorrect) {
+                    el.classList.add('selected-true');
+                }
+            });
+        }
+
+        feedback.classList.add('show');
+        feedback.className = 'feedback show ' + (isCorrect ? 'correct' : 'wrong');
+        feedbackIcon.textContent = isCorrect ? '✅' : '❌';
+        feedbackText.textContent = isCorrect ? '回答正确！' : '回答错误';
+        feedbackAnswer.textContent = `正确答案：${q.answer}`;
+    }
+
+    function goToPrev() {
+        if (currentIndex > 0) {
+            currentIndex--;
+            renderQuestion();
+        }
+    }
+
+    function goToNext() {
+        if (currentIndex < questions.length - 1) {
+            currentIndex++;
+            renderQuestion();
+        } else {
+            if (questions.length > 0) {
+                alert('🎉 恭喜你完成所有题目！');
+            }
+        }
+    }
+
+    function resetQuiz() {
+        if (!questions.length) return;
+        for (const q of questions) {
+            q.userAnswer = null;
+        }
+        currentIndex = 0;
+        renderQuestion();
+    }
+
+    // ============================================================
+    // 5. 文件上传 & 解析
+    // ============================================================
+    function handleFile(file) {
+        if (!file) return;
+        if (!file.name.endsWith('.docx')) {
+            alert('请上传 .docx 格式的文件');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const arrayBuffer = e.target.result;
+            mammoth.extractRawText({ arrayBuffer })
+                .then(result => {
+                    const text = result.value;
+                    if (!text || text.trim().length < 10) {
+                        alert('文档内容为空或无法识别，请检查文件');
+                        return;
+                    }
+                    const parsed = parseQuestions(text);
+                    if (parsed.length === 0) {
+                        alert('未能从文档中识别出题目，请确认格式是否正确');
+                        return;
+                    }
+                    questions = parsed;
+                    currentIndex = 0;
+                    uploadZone.style.display = 'none';
+                    quizArea.classList.add('active');
+                    renderQuestion();
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('解析文档失败，请确保文件格式正确');
+                });
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    // ============================================================
+    // 6. 事件绑定
+    // ============================================================
+    uploadBtn.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length) {
+            handleFile(e.target.files[0]);
+        }
+        fileInput.value = '';
     });
+
+    uploadZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadZone.classList.add('drag-over');
+    });
+    uploadZone.addEventListener('dragleave', () => {
+        uploadZone.classList.remove('drag-over');
+    });
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('drag-over');
+        const files = e.dataTransfer.files;
+        if (files.length) {
+            handleFile(files[0]);
+        }
+    });
+
+    prevBtn.addEventListener('click', goToPrev);
+    nextBtn.addEventListener('click', goToNext);
+    revealBtn.addEventListener('click', revealAnswer);
+    resetBtn.addEventListener('click', resetQuiz);
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') goToPrev();
+        if (e.key === 'ArrowRight') goToNext();
+        if (e.key === 'Enter' && !e.shiftKey) revealAnswer();
+        if (e.key === 'r' || e.key === 'R') resetQuiz();
+    });
+
+    console.log('📘 C++ 刷题工具已加载 (改进解析版)');
 </script>
 </body>
 </html>
