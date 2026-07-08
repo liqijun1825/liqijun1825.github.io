@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>C++ 刷题 · 单题模式（含答题卡）</title>
+    <title>C++ 刷题 · 单题模式（最终稳定版）</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js">
     </script>
     <style>
@@ -136,7 +136,6 @@
             width: 0%;
         }
 
-        /* ===== 答题卡 ===== */
         .answer-sheet {
             display: flex;
             flex-wrap: wrap;
@@ -362,10 +361,7 @@
 
     <section class="quiz-area" id="quizArea">
         <div class="progress-wrap"><div class="bar" id="progressBar"></div></div>
-
-        <!-- 答题卡 -->
         <div class="answer-sheet" id="answerSheet"></div>
-
         <div class="question-meta">
             <span class="qnum" id="qnumLabel">第 1 题</span>
             <span class="qtype" id="qtypeLabel">选择题</span>
@@ -422,47 +418,44 @@
     const resetBtn = $('resetBtn');
 
     // ============================================================
-    // 核心解析器 —— 稳健识别选择题/判断题
+    // 全新解析器 —— 按“答案：”分割，独立处理每个题目
     // ============================================================
     function parseQuestions(text) {
-        const lines = text.split(/\r?\n/);
+        // 1. 按“答案：”或“答案:”分割（保留分隔符，以便提取答案）
+        // 先统一替换为“答案：”
+        let normalized = text.replace(/答案[：:]/g, '答案：');
+        // 分割成块，每块包含“答案：”及其前面的内容
+        const blocks = normalized.split(/(?=答案：)/);
         const result = [];
-        let i = 0;
-        const total = lines.length;
+        let globalIndex = 0;
 
-        while (i < total) {
-            let line = lines[i].trim();
-            if (!line) { i++; continue; }
+        for (let block of blocks) {
+            block = block.trim();
+            if (!block) continue;
 
-            const match = line.match(/^(\d+)[\.、\s]+/);
-            if (!match) { i++; continue; }
-
-            const id = parseInt(match[1], 10);
-            let content = line.replace(/^\d+[\.、\s]+/, '').trim();
-            let options = [];
+            // 分离答案部分
             let answer = '';
-            let type = 'choice';
-
-            let contentLines = [content];
-            let j = i + 1;
-            while (j < total) {
-                const nextLine = lines[j].trim();
-                if (/^\d+[\.、\s]/.test(nextLine)) break;
-                if (/^答案[：:]\s*/.test(nextLine)) {
-                    const ansMatch = nextLine.match(/^答案[：:]\s*(.+)/);
-                    if (ansMatch) answer = ansMatch[1].trim();
-                    j++;
-                    break;
-                }
-                if (nextLine) contentLines.push(nextLine);
-                j++;
+            let content = block;
+            const ansMatch = block.match(/答案：\s*(.+)/);
+            if (ansMatch) {
+                answer = ansMatch[1].trim();
+                // 从内容中移除答案行
+                content = block.replace(/答案：\s*.+/, '').trim();
+            } else {
+                // 没有答案行，跳过
+                continue;
             }
-            let fullContent = contentLines.join('\n');
 
-            // ---- 提取选项（多级策略） ----
+            // 提取题号（第一个数字）
+            const idMatch = content.match(/(\d+)/);
+            if (!idMatch) continue; // 没有题号，跳过
+            const rawId = parseInt(idMatch[1], 10);
+            // 移除题号本身（去掉行首的题号及标点）
+            let questionText = content.replace(/^\s*\d+[、\.\)\s]+/, '').trim();
+
+            // ---- 提取选项 ----
             function extractOptions(text) {
-                // 策略1：直接匹配 “A、xxx；B、xxx；C、xxx；D、xxx” 允许分号或空格
-                // 使用更通用的正则：匹配 A、... B、... C、... D、...
+                // 策略1：匹配 A、xxx；B、xxx；C、xxx；D、xxx
                 const regex = /A[、\.\)\:：]\s*([^；;]*?)\s*[；;]?\s*B[、\.\)\:：]\s*([^；;]*?)\s*[；;]?\s*C[、\.\)\:：]\s*([^；;]*?)\s*[；;]?\s*D[、\.\)\:：]\s*([^；;]*?)\s*(?:[；;]|$)/i;
                 const m = text.match(regex);
                 if (m) {
@@ -471,20 +464,15 @@
                         return texts.map((t, idx) => ({ label: 'ABCD'[idx], text: t }));
                     }
                 }
-
-                // 策略2：按分号或换行分割，逐个匹配
-                const separators = /[；;]|\n/;
-                const parts = text.split(separators).filter(p => p.trim().length > 0);
+                // 策略2：按分号或换行分割
+                const parts = text.split(/[；;]|\n/).filter(p => p.trim().length > 0);
                 let opts = [];
                 for (const p of parts) {
                     const m2 = p.trim().match(/^([A-D])[、\.\)\:：]\s*(.*)/);
-                    if (m2) {
-                        opts.push({ label: m2[1], text: m2[2].trim() });
-                    }
+                    if (m2) opts.push({ label: m2[1], text: m2[2].trim() });
                 }
                 if (opts.length === 4) return opts;
-
-                // 策略3：全局搜索每个选项字母及其后续内容
+                // 策略3：全局搜索
                 const regex3 = /([A-D])[、\.\)\:：]\s*([^；;]*?)(?=\s*[；;]|\s*[A-D][、\.\)\:：]|$)/g;
                 let m3, opts3 = [];
                 while ((m3 = regex3.exec(text)) !== null) {
@@ -493,54 +481,46 @@
                     if (txt) opts3.push({ label, text: txt });
                 }
                 if (opts3.length === 4) return opts3;
-
-                // 策略4：尝试将内容按常见分隔符分割后，取前4个以A-D开头的块
-                const splitRegex = /[；;、，\s]+/;
-                const tokens = text.split(splitRegex).filter(t => t.length > 0);
-                let opts4 = [];
-                for (const tk of tokens) {
-                    const m4 = tk.match(/^([A-D])[、\.\)\:：]?(.*)/);
-                    if (m4) {
-                        opts4.push({ label: m4[1], text: m4[2].trim() || '选项' });
-                    }
-                }
-                if (opts4.length === 4) return opts4;
-
                 return null;
             }
 
-            const extracted = extractOptions(fullContent);
+            const extracted = extractOptions(questionText);
+            let type = 'choice';
+            let options = [];
+            let cleanText = questionText;
+
             if (extracted) {
                 options = extracted;
                 type = 'choice';
-                // 清理题干：移除选项部分
-                let pure = fullContent;
+                // 移除选项文本
+                let pure = cleanText;
                 for (const opt of options) {
                     const regex = new RegExp(`[${opt.label}][、\.\)\:：]\\s*${opt.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'g');
                     pure = pure.replace(regex, '');
                 }
                 pure = pure.replace(/[；;]\s*/g, '').replace(/\n{2,}/g, '\n').trim();
-                content = pure || fullContent.replace(/[；;]\s*/g, '').trim();
+                cleanText = pure || cleanText.replace(/[；;]\s*/g, '').trim();
             } else {
-                // 没有提取到4个选项，判断是否为判断题
-                const isJudge = (answer === '对' || answer === '错' || answer === '√' || answer === '×');
+                // 没有提取到选项，判断是否为判断题
+                const isJudge = (answer === '对' || answer === '错' || answer === '√' || answer === '×' ||
+                                 answer === '正确' || answer === '错误');
                 if (isJudge) {
                     type = 'judge';
-                    if (answer === '√') answer = '对';
-                    if (answer === '×') answer = '错';
-                    content = fullContent.trim();
+                    if (answer === '√' || answer === '正确') answer = '对';
+                    if (answer === '×' || answer === '错误') answer = '错';
+                    cleanText = cleanText.trim();
                 } else {
                     // 尝试从内容中推断
-                    if (/正确|对/.test(fullContent) && !/错误|错/.test(fullContent)) {
+                    if (/正确|对/.test(cleanText) && !/错误|错/.test(cleanText)) {
                         type = 'judge';
                         answer = '对';
-                        content = fullContent.trim();
-                    } else if (/错误|错/.test(fullContent) && !/正确|对/.test(fullContent)) {
+                        cleanText = cleanText.trim();
+                    } else if (/错误|错/.test(cleanText) && !/正确|对/.test(cleanText)) {
                         type = 'judge';
                         answer = '错';
-                        content = fullContent.trim();
+                        cleanText = cleanText.trim();
                     } else {
-                        // 默认作为选择题，填充默认选项
+                        // 默认作为选择题，补充选项
                         type = 'choice';
                         options = [
                             { label: 'A', text: '选项 A' },
@@ -548,73 +528,49 @@
                             { label: 'C', text: '选项 C' },
                             { label: 'D', text: '选项 D' }
                         ];
-                        content = fullContent.trim();
+                        cleanText = cleanText.trim();
+                        // 如果答案不是 A-D，尝试从内容提取
                         if (!/^[A-D]$/.test(answer)) {
-                            const ansInText = fullContent.match(/答案[：:]\s*([A-D])/);
+                            const ansInText = cleanText.match(/答案[：:]\s*([A-D])/);
                             answer = ansInText ? ansInText[1] : 'A';
                         }
                     }
                 }
             }
 
-            // ---- 提取答案（只取首字符） ----
-            if (answer) {
-                const clean = answer.match(/^([A-D对错√×])/);
+            // 再次确保答案格式
+            if (type === 'choice') {
+                const clean = answer.match(/^([A-D])/);
+                if (clean) answer = clean[1];
+                else answer = 'A';
+            } else {
+                // 判断题
+                const clean = answer.match(/^([对错√×正确错误])/);
                 if (clean) {
                     answer = clean[1];
-                    if (answer === '√') answer = '对';
-                    if (answer === '×') answer = '错';
+                    if (answer === '√' || answer === '正确') answer = '对';
+                    if (answer === '×' || answer === '错误') answer = '错';
                 } else {
-                    // 尝试从内容中再找
-                    const ansInText = fullContent.match(/答案[：:]\s*([A-D对错√×])/);
-                    if (ansInText) {
-                        answer = ansInText[1];
-                        if (answer === '√') answer = '对';
-                        if (answer === '×') answer = '错';
-                    } else {
-                        answer = (type === 'choice') ? 'A' : '对';
-                    }
-                }
-            } else {
-                const ansInText = fullContent.match(/答案[：:]\s*([A-D对错√×])/);
-                if (ansInText) {
-                    answer = ansInText[1];
-                    if (answer === '√') answer = '对';
-                    if (answer === '×') answer = '错';
-                } else {
-                    answer = (type === 'choice') ? 'A' : '对';
+                    answer = '对';
                 }
             }
 
-            // 若选择题答案意外为对/错，强制改为A
-            if (type === 'choice' && (answer === '对' || answer === '错')) {
-                answer = 'A';
-            }
-
+            // 增加全局序号
+            globalIndex++;
             result.push({
-                id,
-                type,
-                text: content || '（题目内容为空）',
+                index: globalIndex,
+                rawId: rawId,
+                type: type,
+                text: cleanText || '（题目内容为空）',
                 options: options,
                 answer: answer,
                 userAnswer: null,
                 isCorrect: null,
             });
-
-            i = j;
         }
 
-        // 去重排序
-        const seen = new Set();
-        const unique = [];
-        for (const q of result) {
-            if (!seen.has(q.id)) {
-                seen.add(q.id);
-                unique.push(q);
-            }
-        }
-        unique.sort((a, b) => a.id - b.id);
-        return unique;
+        // 按解析顺序返回，已保证所有题目都在
+        return result;
     }
 
     // ========== 渲染 ==========
@@ -638,7 +594,7 @@
                 else if (q.isCorrect === false) div.classList.add('wrong');
                 else div.classList.add('answered');
             }
-            div.textContent = q.id || idx + 1;
+            div.textContent = q.index;
             div.dataset.index = idx;
             div.addEventListener('click', () => {
                 if (idx !== currentIndex) {
@@ -657,7 +613,7 @@
 
         const total = questions.length;
         progressBar.style.width = ((currentIndex + 1) / total * 100) + '%';
-        qnumLabel.textContent = `第 ${q.id || currentIndex + 1} 题`;
+        qnumLabel.textContent = `第 ${q.index} 题（原题号 ${q.rawId}）`;
         qtypeLabel.textContent = q.type === 'choice' ? '选择题' : '判断题';
         questionText.textContent = q.text;
 
@@ -855,7 +811,7 @@
         if (e.key === 'r' || e.key === 'R') resetProgress();
     });
 
-    console.log('📘 C++ 刷题工具已加载（含答题卡）');
+    console.log('📘 C++ 刷题工具已加载（最终稳定版，按答案分割）');
 </script>
 </body>
 </html>
