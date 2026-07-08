@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>C++ 刷题 · 单题模式</title>
-    <!-- mammoth.js 用于解析 docx -->
+    <title>C++ 刷题 · 单题模式（含答题卡）</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js">
     </script>
     <style>
-        /* ===== 全局重置 & 变量 ===== */
         :root {
             --primary: #4f6ef7;
             --primary-light: #e8ecff;
@@ -26,15 +24,9 @@
             --radius: 16px;
             --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin:0; padding:0; box-sizing:border-box; }
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--gray-50);
             color: var(--gray-900);
             min-height: 100vh;
@@ -43,11 +35,9 @@
             align-items: center;
             padding: 20px;
         }
-
         .app {
             width: 100%;
-            max-width: 820px;
-            margin: 0 auto;
+            max-width: 860px;
             background: #fff;
             border-radius: var(--radius);
             box-shadow: var(--shadow);
@@ -55,39 +45,37 @@
             min-height: 560px;
             display: flex;
             flex-direction: column;
-            position: relative;
         }
-
         .app-header {
-            padding: 22px 30px 16px;
+            padding: 20px 30px 14px;
             border-bottom: 1px solid var(--gray-200);
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 10px;
-            background: #fff;
+            gap: 8px;
         }
         .app-header h1 {
             font-size: 20px;
             font-weight: 700;
-            letter-spacing: -0.3px;
             background: linear-gradient(135deg, var(--primary), #8b5cf6);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
         .app-header .stats {
+            display: flex;
+            gap: 16px;
             font-size: 14px;
             color: var(--gray-600);
+        }
+        .app-header .stats span {
             background: var(--gray-100);
-            padding: 4px 14px;
+            padding: 2px 12px;
             border-radius: 30px;
             font-weight: 500;
         }
-        .app-header .stats strong {
-            color: var(--gray-900);
-        }
+        .app-header .stats .correct { color: var(--success); background: #eafaf1; }
 
         .upload-zone {
             flex: 1;
@@ -97,26 +85,11 @@
             justify-content: center;
             padding: 50px 30px 60px;
             text-align: center;
-            transition: var(--transition);
             background: #fff;
         }
-        .upload-zone .icon {
-            font-size: 56px;
-            margin-bottom: 16px;
-            opacity: 0.7;
-        }
-        .upload-zone h2 {
-            font-size: 22px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: var(--gray-800);
-        }
-        .upload-zone p {
-            color: var(--gray-600);
-            font-size: 15px;
-            max-width: 400px;
-            margin-bottom: 24px;
-        }
+        .upload-zone .icon { font-size: 56px; margin-bottom: 16px; opacity: 0.7; }
+        .upload-zone h2 { font-size: 22px; font-weight: 600; margin-bottom: 8px; color: var(--gray-800); }
+        .upload-zone p { color: var(--gray-600); font-size: 15px; max-width: 400px; margin-bottom: 24px; }
         .upload-zone .btn-upload {
             display: inline-block;
             background: var(--primary);
@@ -126,46 +99,33 @@
             font-weight: 600;
             font-size: 15px;
             cursor: pointer;
-            transition: var(--transition);
             border: none;
             box-shadow: 0 4px 14px rgba(79, 110, 247, 0.30);
+            transition: var(--transition);
         }
         .upload-zone .btn-upload:hover {
             background: var(--primary-dark);
             transform: translateY(-2px);
             box-shadow: 0 8px 24px rgba(79, 110, 247, 0.35);
         }
-        .upload-zone .btn-upload:active {
-            transform: scale(0.97);
-        }
-        .upload-zone .hint {
-            margin-top: 18px;
-            font-size: 13px;
-            color: var(--gray-300);
-        }
-        .upload-zone.drag-over {
-            background: var(--primary-light);
-            border: 2px dashed var(--primary);
-            border-radius: var(--radius);
-        }
+        .upload-zone .hint { margin-top: 18px; font-size: 13px; color: var(--gray-300); }
+        .upload-zone.drag-over { background: var(--primary-light); border: 2px dashed var(--primary); border-radius: var(--radius); }
 
         .quiz-area {
             flex: 1;
             display: none;
             flex-direction: column;
-            padding: 24px 30px 20px;
+            padding: 16px 30px 18px;
             background: #fff;
         }
-        .quiz-area.active {
-            display: flex;
-        }
+        .quiz-area.active { display: flex; }
 
         .progress-wrap {
             width: 100%;
             height: 4px;
             background: var(--gray-200);
             border-radius: 4px;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             overflow: hidden;
         }
         .progress-wrap .bar {
@@ -176,11 +136,57 @@
             width: 0%;
         }
 
+        /* ===== 答题卡 ===== */
+        .answer-sheet {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 8px 0 12px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--gray-200);
+            max-height: 120px;
+            overflow-y: auto;
+        }
+        .answer-sheet .card-item {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gray-600);
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid transparent;
+            user-select: none;
+        }
+        .answer-sheet .card-item:hover { transform: scale(1.05); }
+        .answer-sheet .card-item.active {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+        .answer-sheet .card-item.correct {
+            background: var(--success);
+            color: #fff;
+        }
+        .answer-sheet .card-item.wrong {
+            background: var(--danger);
+            color: #fff;
+        }
+        .answer-sheet .card-item.answered {
+            background: var(--gray-300);
+            color: #fff;
+        }
+
         .question-meta {
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            margin-bottom: 14px;
+            margin-bottom: 10px;
             flex-wrap: wrap;
             gap: 6px;
         }
@@ -203,25 +209,13 @@
         .question-text {
             font-size: 17px;
             line-height: 1.7;
-            margin-bottom: 22px;
-            padding: 8px 0 4px;
+            margin-bottom: 18px;
+            padding: 4px 0 2px;
             white-space: pre-wrap;
             word-break: break-word;
         }
-        .question-text code {
-            background: var(--gray-100);
-            padding: 1px 6px;
-            border-radius: 4px;
-            font-family: 'JetBrains Mono', 'Fira Code', monospace;
-            font-size: 0.9em;
-        }
 
-        .options {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 24px;
-        }
+        .options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
         .options .opt {
             display: flex;
             align-items: center;
@@ -235,65 +229,22 @@
             font-size: 15px;
             line-height: 1.5;
         }
-        .options .opt:hover {
-            border-color: var(--primary);
-            background: var(--primary-light);
-        }
-        .options .opt .label {
-            font-weight: 600;
-            color: var(--gray-600);
-            min-width: 24px;
-        }
-        .options .opt.selected {
-            border-color: var(--primary);
-            background: var(--primary-light);
-        }
-        .options .opt.correct {
-            border-color: var(--success);
-            background: #eafaf1;
-        }
-        .options .opt.correct .label {
-            color: var(--success);
-        }
-        .options .opt.wrong {
-            border-color: var(--danger);
-            background: #fdedec;
-        }
-        .options .opt.wrong .label {
-            color: var(--danger);
-        }
-        .options .opt.reveal-correct {
-            border-color: var(--success);
-            background: #eafaf1;
-        }
-        .options .opt.reveal-correct .label {
-            color: var(--success);
-        }
-        .options .opt.disabled {
-            cursor: default;
-            opacity: 0.85;
-        }
-        .options .opt.disabled:hover {
-            border-color: var(--gray-200);
-            background: #fff;
-        }
-        .options .opt.disabled.selected:hover {
-            border-color: var(--primary);
-            background: var(--primary-light);
-        }
-        .options .opt.disabled.correct:hover {
-            border-color: var(--success);
-            background: #eafaf1;
-        }
-        .options .opt.disabled.wrong:hover {
-            border-color: var(--danger);
-            background: #fdedec;
-        }
+        .options .opt:hover { border-color: var(--primary); background: var(--primary-light); }
+        .options .opt .label { font-weight: 600; color: var(--gray-600); min-width: 24px; }
+        .options .opt.selected { border-color: var(--primary); background: var(--primary-light); }
+        .options .opt.correct { border-color: var(--success); background: #eafaf1; }
+        .options .opt.correct .label { color: var(--success); }
+        .options .opt.wrong { border-color: var(--danger); background: #fdedec; }
+        .options .opt.wrong .label { color: var(--danger); }
+        .options .opt.reveal-correct { border-color: var(--success); background: #eafaf1; }
+        .options .opt.reveal-correct .label { color: var(--success); }
+        .options .opt.disabled { cursor: default; opacity: 0.85; }
+        .options .opt.disabled:hover { border-color: var(--gray-200); background: #fff; }
 
         .judge-group {
             display: flex;
             gap: 16px;
-            margin-bottom: 24px;
+            margin-bottom: 18px;
             flex-wrap: wrap;
         }
         .judge-group .jbtn {
@@ -310,51 +261,18 @@
             background: #fff;
             color: var(--gray-600);
         }
-        .judge-group .jbtn:hover {
-            border-color: var(--primary);
-            background: var(--primary-light);
-        }
-        .judge-group .jbtn.selected-true {
-            border-color: var(--success);
-            background: #eafaf1;
-            color: var(--success);
-        }
-        .judge-group .jbtn.selected-false {
-            border-color: var(--danger);
-            background: #fdedec;
-            color: var(--danger);
-        }
-        .judge-group .jbtn.reveal-true {
-            border-color: var(--success);
-            background: #eafaf1;
-            color: var(--success);
-        }
-        .judge-group .jbtn.reveal-false {
-            border-color: var(--danger);
-            background: #fdedec;
-            color: var(--danger);
-        }
-        .judge-group .jbtn.disabled {
-            cursor: default;
-            opacity: 0.85;
-        }
-        .judge-group .jbtn.disabled:hover {
-            border-color: var(--gray-200);
-            background: #fff;
-        }
-        .judge-group .jbtn.disabled.selected-true:hover {
-            border-color: var(--success);
-            background: #eafaf1;
-        }
-        .judge-group .jbtn.disabled.selected-false:hover {
-            border-color: var(--danger);
-            background: #fdedec;
-        }
+        .judge-group .jbtn:hover { border-color: var(--primary); background: var(--primary-light); }
+        .judge-group .jbtn.selected-true { border-color: var(--success); background: #eafaf1; color: var(--success); }
+        .judge-group .jbtn.selected-false { border-color: var(--danger); background: #fdedec; color: var(--danger); }
+        .judge-group .jbtn.reveal-true { border-color: var(--success); background: #eafaf1; color: var(--success); }
+        .judge-group .jbtn.reveal-false { border-color: var(--danger); background: #fdedec; color: var(--danger); }
+        .judge-group .jbtn.disabled { cursor: default; opacity: 0.85; }
+        .judge-group .jbtn.disabled:hover { border-color: var(--gray-200); background: #fff; }
 
         .feedback {
             padding: 14px 18px;
             border-radius: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 14px;
             font-size: 15px;
             font-weight: 500;
             display: none;
@@ -363,39 +281,22 @@
             background: var(--gray-100);
             color: var(--gray-800);
         }
-        .feedback.show {
-            display: flex;
-        }
-        .feedback.correct {
-            background: #eafaf1;
-            color: #1a7a3a;
-        }
-        .feedback.wrong {
-            background: #fdedec;
-            color: #b03a2e;
-        }
-        .feedback .ans {
-            font-weight: 700;
-            margin-left: auto;
-            padding: 2px 14px;
-            background: rgba(0, 0, 0, 0.06);
-            border-radius: 30px;
-        }
+        .feedback.show { display: flex; }
+        .feedback.correct { background: #eafaf1; color: #1a7a3a; }
+        .feedback.wrong { background: #fdedec; color: #b03a2e; }
+        .feedback .ans { font-weight: 700; margin-left: auto; padding: 2px 14px; background: rgba(0,0,0,0.06); border-radius: 30px; }
 
         .action-bar {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            margin-top: 6px;
-            padding-top: 16px;
+            margin-top: 4px;
+            padding-top: 14px;
             border-top: 1px solid var(--gray-200);
             flex-wrap: wrap;
         }
-        .action-bar .nav-group {
-            display: flex;
-            gap: 8px;
-        }
+        .action-bar .nav-group { display: flex; gap: 8px; }
         .action-bar button {
             padding: 10px 22px;
             border: none;
@@ -410,133 +311,46 @@
             align-items: center;
             gap: 6px;
         }
-        .action-bar button:hover:not(:disabled) {
-            background: var(--gray-200);
-        }
-        .action-bar button:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-        .action-bar .btn-primary {
-            background: var(--primary);
-            color: #fff;
-        }
-        .action-bar .btn-primary:hover:not(:disabled) {
-            background: var(--primary-dark);
-            transform: translateY(-1px);
-        }
-        .action-bar .btn-success {
-            background: var(--success);
-            color: #fff;
-        }
-        .action-bar .btn-success:hover:not(:disabled) {
-            background: #27ae60;
-        }
-        .action-bar .btn-outline {
-            background: transparent;
-            border: 2px solid var(--gray-200);
-        }
-        .action-bar .btn-outline:hover:not(:disabled) {
-            border-color: var(--primary);
-            color: var(--primary);
-        }
+        .action-bar button:hover:not(:disabled) { background: var(--gray-200); }
+        .action-bar button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .action-bar .btn-primary { background: var(--primary); color: #fff; }
+        .action-bar .btn-primary:hover:not(:disabled) { background: var(--primary-dark); }
+        .action-bar .btn-outline { background: transparent; border: 2px solid var(--gray-200); }
+        .action-bar .btn-outline:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+        .action-bar .btn-danger { background: var(--danger); color: #fff; }
+        .action-bar .btn-danger:hover:not(:disabled) { background: #c0392b; }
 
         @media (max-width: 640px) {
-            .app-header {
-                padding: 16px 18px 12px;
-            }
-            .app-header h1 {
-                font-size: 17px;
-            }
-            .upload-zone {
-                padding: 30px 18px 40px;
-            }
-            .upload-zone .icon {
-                font-size: 40px;
-            }
-            .upload-zone h2 {
-                font-size: 18px;
-            }
-            .quiz-area {
-                padding: 16px 18px 14px;
-            }
-            .question-text {
-                font-size: 15px;
-            }
-            .options .opt {
-                padding: 10px 14px;
-                font-size: 14px;
-            }
-            .action-bar {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .action-bar .nav-group {
-                justify-content: center;
-            }
-            .action-bar button {
-                justify-content: center;
-                padding: 10px 16px;
-                font-size: 13px;
-            }
-            .judge-group .jbtn {
-                min-width: 70px;
-                padding: 12px 10px;
-                font-size: 14px;
-            }
-            .question-meta .qnum {
-                font-size: 13px;
-            }
+            .app-header { padding: 14px 16px 10px; }
+            .app-header h1 { font-size: 17px; }
+            .app-header .stats { font-size: 12px; gap: 8px; }
+            .upload-zone { padding: 30px 18px 40px; }
+            .upload-zone .icon { font-size: 40px; }
+            .upload-zone h2 { font-size: 18px; }
+            .quiz-area { padding: 12px 16px 12px; }
+            .question-text { font-size: 15px; }
+            .options .opt { padding: 10px 14px; font-size: 14px; }
+            .action-bar { flex-direction: column; align-items: stretch; }
+            .action-bar .nav-group { justify-content: center; }
+            .action-bar button { justify-content: center; padding: 10px 16px; font-size: 13px; }
+            .judge-group .jbtn { min-width: 70px; padding: 12px 10px; font-size: 14px; }
+            .answer-sheet .card-item { width: 28px; height: 28px; font-size: 11px; }
         }
-
-        .hidden {
-            display: none !important;
-        }
-        .mt-2 {
-            margin-top: 8px;
-        }
-        .text-center {
-            text-align: center;
-        }
-
-        .spinner {
-            display: inline-block;
-            width: 24px;
-            height: 24px;
-            border: 3px solid var(--gray-200);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 0.7s linear infinite;
-            margin-right: 10px;
-        }
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .app::-webkit-scrollbar {
-            width: 4px;
-        }
-        .app::-webkit-scrollbar-track {
-            background: var(--gray-100);
-        }
-        .app::-webkit-scrollbar-thumb {
-            background: var(--gray-300);
-            border-radius: 8px;
-        }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
 <div class="app" id="app">
-    <!-- ===== 头部 ===== -->
     <header class="app-header">
         <h1>📘 C++ 刷题 · 单题模式</h1>
-        <span class="stats" id="statsLabel">📄 上传 docx 开始</span>
+        <div class="stats" id="statsDisplay">
+            <span id="totalCount">📚 0 题</span>
+            <span id="answeredCount">✅ 0 已答</span>
+            <span id="correctCount" class="correct">✔️ 0 正确</span>
+        </div>
     </header>
 
-    <!-- ===== 上传区域 ===== -->
     <section class="upload-zone" id="uploadZone">
         <div class="icon">📂</div>
         <h2>上传 C++ 复习题文档</h2>
@@ -546,36 +360,24 @@
         <div class="hint">或直接拖拽文件到此处</div>
     </section>
 
-    <!-- ===== 刷题区域 ===== -->
     <section class="quiz-area" id="quizArea">
-        <!-- 进度条 -->
-        <div class="progress-wrap">
-            <div class="bar" id="progressBar"></div>
-        </div>
+        <div class="progress-wrap"><div class="bar" id="progressBar"></div></div>
 
-        <!-- 题目标题 -->
+        <!-- 答题卡 -->
+        <div class="answer-sheet" id="answerSheet"></div>
+
         <div class="question-meta">
             <span class="qnum" id="qnumLabel">第 1 题</span>
             <span class="qtype" id="qtypeLabel">选择题</span>
         </div>
-
-        <!-- 题目内容 -->
         <div class="question-text" id="questionText"></div>
-
-        <!-- 选项容器 (选择题) -->
         <div class="options" id="optionsContainer"></div>
-
-        <!-- 判断题容器 -->
         <div class="judge-group" id="judgeContainer"></div>
-
-        <!-- 反馈 -->
         <div class="feedback" id="feedback">
             <span id="feedbackIcon">✅</span>
             <span id="feedbackText"></span>
             <span class="ans" id="feedbackAnswer"></span>
         </div>
-
-        <!-- 底部操作 -->
         <div class="action-bar">
             <div class="nav-group">
                 <button id="prevBtn" disabled>◀ 上一题</button>
@@ -583,27 +385,28 @@
             </div>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
                 <button class="btn-primary" id="revealBtn">💡 显示答案</button>
-                <button class="btn-outline" id="resetBtn">🔄 重置</button>
+                <button class="btn-danger" id="resetBtn">🔄 重置进度</button>
             </div>
         </div>
     </section>
 </div>
 
 <script>
-    // ============================================================
-    // 1. 核心数据
-    // ============================================================
+    // ========== 数据 ==========
     let questions = [];
     let currentIndex = 0;
     let revealed = false;
 
-    const $ = (id) => document.getElementById(id);
+    const $ = id => document.getElementById(id);
     const uploadZone = $('uploadZone');
     const quizArea = $('quizArea');
     const fileInput = $('fileInput');
     const uploadBtn = $('uploadBtn');
-    const statsLabel = $('statsLabel');
+    const totalCount = $('totalCount');
+    const answeredCount = $('answeredCount');
+    const correctCount = $('correctCount');
     const progressBar = $('progressBar');
+    const answerSheet = $('answerSheet');
     const qnumLabel = $('qnumLabel');
     const qtypeLabel = $('qtypeLabel');
     const questionText = $('questionText');
@@ -619,7 +422,7 @@
     const resetBtn = $('resetBtn');
 
     // ============================================================
-    // 2. 解析器 (改进版，支持分号分隔的选项)
+    // 核心解析器 —— 稳健识别选择题/判断题
     // ============================================================
     function parseQuestions(text) {
         const lines = text.split(/\r?\n/);
@@ -631,7 +434,6 @@
             let line = lines[i].trim();
             if (!line) { i++; continue; }
 
-            // 匹配题号
             const match = line.match(/^(\d+)[\.、\s]+/);
             if (!match) { i++; continue; }
 
@@ -641,7 +443,6 @@
             let answer = '';
             let type = 'choice';
 
-            // 收集后续行直到遇到下一个题号或"答案："
             let contentLines = [content];
             let j = i + 1;
             while (j < total) {
@@ -649,176 +450,161 @@
                 if (/^\d+[\.、\s]/.test(nextLine)) break;
                 if (/^答案[：:]\s*/.test(nextLine)) {
                     const ansMatch = nextLine.match(/^答案[：:]\s*(.+)/);
-                    if (ansMatch) {
-                        answer = ansMatch[1].trim();
-                    }
+                    if (ansMatch) answer = ansMatch[1].trim();
                     j++;
                     break;
                 }
                 if (nextLine) contentLines.push(nextLine);
                 j++;
             }
-
             let fullContent = contentLines.join('\n');
 
-            // ---- 提取选项 ----
-            // 策略1：按标准选项行匹配（换行分割）
-            const optRegex = /([A-D])[、\.\)\:：]\s*([^\n]*)/g;
-            let optMatch;
-            let extractedOptions = [];
-            while ((optMatch = optRegex.exec(fullContent)) !== null) {
-                const label = optMatch[1];
-                const text = optMatch[2].trim();
-                if (text) {
-                    extractedOptions.push({ label, text });
+            // ---- 提取选项（多级策略） ----
+            function extractOptions(text) {
+                // 策略1：直接匹配 “A、xxx；B、xxx；C、xxx；D、xxx” 允许分号或空格
+                // 使用更通用的正则：匹配 A、... B、... C、... D、...
+                const regex = /A[、\.\)\:：]\s*([^；;]*?)\s*[；;]?\s*B[、\.\)\:：]\s*([^；;]*?)\s*[；;]?\s*C[、\.\)\:：]\s*([^；;]*?)\s*[；;]?\s*D[、\.\)\:：]\s*([^；;]*?)\s*(?:[；;]|$)/i;
+                const m = text.match(regex);
+                if (m) {
+                    const texts = [m[1].trim(), m[2].trim(), m[3].trim(), m[4].trim()];
+                    if (texts.every(t => t.length > 0)) {
+                        return texts.map((t, idx) => ({ label: 'ABCD'[idx], text: t }));
+                    }
                 }
-            }
-            if (extractedOptions.length === 4) {
-                options = extractedOptions;
-            } else {
-                // 策略2：将内容按分号（; 或 ；）分割，然后提取
-                const parts = fullContent.split(/[；;]\s*/);
-                let tempOpts = [];
+
+                // 策略2：按分号或换行分割，逐个匹配
+                const separators = /[；;]|\n/;
+                const parts = text.split(separators).filter(p => p.trim().length > 0);
+                let opts = [];
                 for (const p of parts) {
-                    const m = p.match(/^([A-D])[、\.\)\:：]\s*(.*)/);
-                    if (m) {
-                        tempOpts.push({ label: m[1], text: m[2].trim() });
+                    const m2 = p.trim().match(/^([A-D])[、\.\)\:：]\s*(.*)/);
+                    if (m2) {
+                        opts.push({ label: m2[1], text: m2[2].trim() });
                     }
                 }
-                if (tempOpts.length === 4) {
-                    options = tempOpts;
-                } else {
-                    // 策略3：按换行再提取一次（有些选项可能每行一个，但行内有多余字符）
-                    const linesArr = fullContent.split('\n');
-                    let opts = [];
-                    for (const ln of linesArr) {
-                        const m = ln.trim().match(/^([A-D])[、\.\)\:：]\s*(.*)/);
-                        if (m) {
-                            opts.push({ label: m[1], text: m[2].trim() });
-                        }
-                    }
-                    if (opts.length === 4) {
-                        options = opts;
-                    } else {
-                        // 策略4：从整段中尝试提取（可能用分号但没用空格）
-                        const combined = fullContent.replace(/\s+/g, ' ');
-                        const regex = /([A-D])[、\.\)\:：]\s*([^；;]*?)(?=[A-D][、\.\)\:：]|$)/g;
-                        let m;
-                        let opts4 = [];
-                        while ((m = regex.exec(combined)) !== null) {
-                            const label = m[1];
-                            const text = m[2].trim();
-                            if (text) opts4.push({ label, text });
-                        }
-                        if (opts4.length === 4) options = opts4;
+                if (opts.length === 4) return opts;
+
+                // 策略3：全局搜索每个选项字母及其后续内容
+                const regex3 = /([A-D])[、\.\)\:：]\s*([^；;]*?)(?=\s*[；;]|\s*[A-D][、\.\)\:：]|$)/g;
+                let m3, opts3 = [];
+                while ((m3 = regex3.exec(text)) !== null) {
+                    const label = m3[1];
+                    const txt = m3[2].trim();
+                    if (txt) opts3.push({ label, text: txt });
+                }
+                if (opts3.length === 4) return opts3;
+
+                // 策略4：尝试将内容按常见分隔符分割后，取前4个以A-D开头的块
+                const splitRegex = /[；;、，\s]+/;
+                const tokens = text.split(splitRegex).filter(t => t.length > 0);
+                let opts4 = [];
+                for (const tk of tokens) {
+                    const m4 = tk.match(/^([A-D])[、\.\)\:：]?(.*)/);
+                    if (m4) {
+                        opts4.push({ label: m4[1], text: m4[2].trim() || '选项' });
                     }
                 }
+                if (opts4.length === 4) return opts4;
+
+                return null;
             }
 
-            // 如果选项仍为空，但答案是单个字母，可能是选择，补充默认选项
-            if (options.length === 0 && answer && /^[A-D]$/.test(answer.toUpperCase())) {
-                // 尝试从答案中提取选项文本（如果内容中有类似"A、..."）
-                const regex = /([A-D])[、\.\)\:：]\s*([^；;]*)/g;
-                let m;
-                let fallback = [];
-                while ((m = regex.exec(fullContent)) !== null) {
-                    const label = m[1];
-                    const text = m[2].trim();
-                    if (text) fallback.push({ label, text });
-                }
-                if (fallback.length === 4) options = fallback;
-                else {
-                    options = [
-                        { label: 'A', text: '选项 A' },
-                        { label: 'B', text: '选项 B' },
-                        { label: 'C', text: '选项 C' },
-                        { label: 'D', text: '选项 D' }
-                    ];
-                }
-            }
-
-            // 确定类型
-            if (options.length === 4) {
+            const extracted = extractOptions(fullContent);
+            if (extracted) {
+                options = extracted;
                 type = 'choice';
-                // 清理题目内容：移除选项部分
+                // 清理题干：移除选项部分
                 let pure = fullContent;
                 for (const opt of options) {
                     const regex = new RegExp(`[${opt.label}][、\.\)\:：]\\s*${opt.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'g');
                     pure = pure.replace(regex, '');
                 }
-                pure = pure.replace(/[；;]\s*/g, ''); // 移除多余分号
-                pure = pure.replace(/\n{2,}/g, '\n').trim();
+                pure = pure.replace(/[；;]\s*/g, '').replace(/\n{2,}/g, '\n').trim();
                 content = pure || fullContent.replace(/[；;]\s*/g, '').trim();
             } else {
-                // 判断是否为判断题
-                if (answer === '对' || answer === '错' || answer === '√' || answer === '×') {
+                // 没有提取到4个选项，判断是否为判断题
+                const isJudge = (answer === '对' || answer === '错' || answer === '√' || answer === '×');
+                if (isJudge) {
                     type = 'judge';
                     if (answer === '√') answer = '对';
                     if (answer === '×') answer = '错';
-                    content = fullContent;
+                    content = fullContent.trim();
                 } else {
-                    // 尝试从内容中判断
-                    if (/对/.test(fullContent) && !/错/.test(fullContent)) { type = 'judge'; answer = '对'; } 
-                    else if (/错/.test(fullContent) && !/对/.test(fullContent)) { type = 'judge'; answer = '错'; } 
-                    else {
+                    // 尝试从内容中推断
+                    if (/正确|对/.test(fullContent) && !/错误|错/.test(fullContent)) {
+                        type = 'judge';
+                        answer = '对';
+                        content = fullContent.trim();
+                    } else if (/错误|错/.test(fullContent) && !/正确|对/.test(fullContent)) {
+                        type = 'judge';
+                        answer = '错';
+                        content = fullContent.trim();
+                    } else {
+                        // 默认作为选择题，填充默认选项
                         type = 'choice';
-                        if (options.length === 0) {
-                            options = [
-                                { label: 'A', text: '选项 A' },
-                                { label: 'B', text: '选项 B' },
-                                { label: 'C', text: '选项 C' },
-                                { label: 'D', text: '选项 D' }
-                            ];
-                        }
-                        content = fullContent;
-                    }
-                }
-            }
-
-            // 如果答案还没提取到，尝试从内容末尾提取
-            if (!answer) {
-                const ansMatch2 = fullContent.match(/答案[：:]\s*(.+)/);
-                if (ansMatch2) answer = ansMatch2[1].trim();
-            }
-
-            // 如果答案包含 'A' 'B' 'C' 'D' 且是单个字符，修正
-            if (answer && /^[A-D]$/.test(answer.toUpperCase())) {
-                type = 'choice';
-                if (options.length === 0) {
-                    const regex2 = /([A-D])[、\.\)\:：]\s*([^；;]*)/g;
-                    let m2;
-                    let opts2 = [];
-                    while ((m2 = regex2.exec(fullContent)) !== null) {
-                        if (m2[2].trim()) opts2.push({ label: m2[1], text: m2[2].trim() });
-                    }
-                    if (opts2.length === 4) options = opts2;
-                    else {
                         options = [
                             { label: 'A', text: '选项 A' },
                             { label: 'B', text: '选项 B' },
                             { label: 'C', text: '选项 C' },
                             { label: 'D', text: '选项 D' }
                         ];
+                        content = fullContent.trim();
+                        if (!/^[A-D]$/.test(answer)) {
+                            const ansInText = fullContent.match(/答案[：:]\s*([A-D])/);
+                            answer = ansInText ? ansInText[1] : 'A';
+                        }
                     }
                 }
             }
 
-            // 清理答案
-            answer = answer.replace(/^[：:]\s*/, '').trim();
+            // ---- 提取答案（只取首字符） ----
+            if (answer) {
+                const clean = answer.match(/^([A-D对错√×])/);
+                if (clean) {
+                    answer = clean[1];
+                    if (answer === '√') answer = '对';
+                    if (answer === '×') answer = '错';
+                } else {
+                    // 尝试从内容中再找
+                    const ansInText = fullContent.match(/答案[：:]\s*([A-D对错√×])/);
+                    if (ansInText) {
+                        answer = ansInText[1];
+                        if (answer === '√') answer = '对';
+                        if (answer === '×') answer = '错';
+                    } else {
+                        answer = (type === 'choice') ? 'A' : '对';
+                    }
+                }
+            } else {
+                const ansInText = fullContent.match(/答案[：:]\s*([A-D对错√×])/);
+                if (ansInText) {
+                    answer = ansInText[1];
+                    if (answer === '√') answer = '对';
+                    if (answer === '×') answer = '错';
+                } else {
+                    answer = (type === 'choice') ? 'A' : '对';
+                }
+            }
+
+            // 若选择题答案意外为对/错，强制改为A
+            if (type === 'choice' && (answer === '对' || answer === '错')) {
+                answer = 'A';
+            }
 
             result.push({
                 id,
                 type,
-                text: content.trim() || '（题目内容为空）',
+                text: content || '（题目内容为空）',
                 options: options,
-                answer: answer || (type === 'choice' ? 'A' : '对'),
+                answer: answer,
                 userAnswer: null,
+                isCorrect: null,
             });
 
             i = j;
         }
 
-        // 去重并排序
+        // 去重排序
         const seen = new Set();
         const unique = [];
         for (const q of result) {
@@ -831,21 +617,48 @@
         return unique;
     }
 
-    // ============================================================
-    // 3. 渲染引擎
-    // ============================================================
+    // ========== 渲染 ==========
+    function updateStats() {
+        const total = questions.length;
+        const answered = questions.filter(q => q.userAnswer !== null).length;
+        const correct = questions.filter(q => q.isCorrect === true).length;
+        totalCount.textContent = `📚 ${total} 题`;
+        answeredCount.textContent = `✅ ${answered} 已答`;
+        correctCount.textContent = `✔️ ${correct} 正确`;
+    }
+
+    function renderAnswerSheet() {
+        answerSheet.innerHTML = '';
+        questions.forEach((q, idx) => {
+            const div = document.createElement('div');
+            div.className = 'card-item';
+            if (idx === currentIndex) div.classList.add('active');
+            if (q.userAnswer !== null) {
+                if (q.isCorrect === true) div.classList.add('correct');
+                else if (q.isCorrect === false) div.classList.add('wrong');
+                else div.classList.add('answered');
+            }
+            div.textContent = q.id || idx + 1;
+            div.dataset.index = idx;
+            div.addEventListener('click', () => {
+                if (idx !== currentIndex) {
+                    currentIndex = idx;
+                    renderQuestion();
+                }
+            });
+            answerSheet.appendChild(div);
+        });
+    }
+
     function renderQuestion() {
         if (!questions.length) return;
         const q = questions[currentIndex];
         if (!q) return;
 
         const total = questions.length;
-        const pct = ((currentIndex + 1) / total * 100);
-        progressBar.style.width = pct + '%';
-        statsLabel.innerHTML = `<strong>${currentIndex + 1}</strong> / ${total} 题`;
+        progressBar.style.width = ((currentIndex + 1) / total * 100) + '%';
         qnumLabel.textContent = `第 ${q.id || currentIndex + 1} 题`;
         qtypeLabel.textContent = q.type === 'choice' ? '选择题' : '判断题';
-
         questionText.textContent = q.text;
 
         feedback.classList.remove('show', 'correct', 'wrong');
@@ -861,9 +674,7 @@
                 const opt = q.options[i] || { label: labels[i], text: '选项' + labels[i] };
                 const div = document.createElement('div');
                 div.className = 'opt';
-                if (q.userAnswer === opt.label) {
-                    div.classList.add('selected');
-                }
+                if (q.userAnswer === opt.label) div.classList.add('selected');
                 div.dataset.label = opt.label;
                 div.innerHTML = `<span class="label">${opt.label}.</span><span>${opt.text}</span>`;
                 div.addEventListener('click', () => onOptionClick(opt.label));
@@ -892,22 +703,21 @@
         }
 
         prevBtn.disabled = currentIndex === 0;
-        nextBtn.disabled = currentIndex === questions.length - 1;
-        nextBtn.textContent = currentIndex === questions.length - 1 ? '完成 🎉' : '下一题 ▶';
+        nextBtn.disabled = currentIndex === total - 1;
+        nextBtn.textContent = currentIndex === total - 1 ? '完成 🎉' : '下一题 ▶';
 
-        if (q.userAnswer) {
-            revealAnswer();
-        }
+        if (q.userAnswer) revealAnswer();
+        updateStats();
+        renderAnswerSheet();
     }
 
-    // ============================================================
-    // 4. 交互逻辑
-    // ============================================================
+    // ========== 交互 ==========
     function onOptionClick(label) {
         if (revealed) return;
         const q = questions[currentIndex];
         if (!q || q.type !== 'choice') return;
         q.userAnswer = label;
+        q.isCorrect = (label === q.answer);
         renderQuestion();
         revealAnswer();
     }
@@ -917,6 +727,7 @@
         const q = questions[currentIndex];
         if (!q || q.type !== 'judge') return;
         q.userAnswer = value;
+        q.isCorrect = (value === q.answer);
         renderQuestion();
         revealAnswer();
     }
@@ -933,37 +744,25 @@
             return;
         }
         revealed = true;
-        const isCorrect = q.userAnswer === q.answer;
+        const isCorrect = q.isCorrect;
 
         if (q.type === 'choice') {
             const items = optionsContainer.querySelectorAll('.opt');
             items.forEach(el => {
                 el.classList.add('disabled');
                 const label = el.dataset.label;
-                if (label === q.answer) {
-                    el.classList.add('reveal-correct');
-                }
-                if (label === q.userAnswer && !isCorrect) {
-                    el.classList.add('wrong');
-                }
-                if (label === q.userAnswer && isCorrect) {
-                    el.classList.add('correct');
-                }
+                if (label === q.answer) el.classList.add('reveal-correct');
+                if (label === q.userAnswer && !isCorrect) el.classList.add('wrong');
+                if (label === q.userAnswer && isCorrect) el.classList.add('correct');
             });
         } else {
             const btns = judgeContainer.querySelectorAll('.jbtn');
             btns.forEach(el => {
                 el.classList.add('disabled');
                 const val = el.dataset.value;
-                if (val === q.answer) {
-                    el.classList.add('reveal-true');
-                }
-                if (val === q.userAnswer && !isCorrect) {
-                    el.classList.add('selected-false');
-                }
-                if (val === q.userAnswer && isCorrect) {
-                    el.classList.add('selected-true');
-                }
+                if (val === q.answer) el.classList.add('reveal-true');
+                if (val === q.userAnswer && !isCorrect) el.classList.add('selected-false');
+                if (val === q.userAnswer && isCorrect) el.classList.add('selected-true');
             });
         }
 
@@ -972,49 +771,39 @@
         feedbackIcon.textContent = isCorrect ? '✅' : '❌';
         feedbackText.textContent = isCorrect ? '回答正确！' : '回答错误';
         feedbackAnswer.textContent = `正确答案：${q.answer}`;
+        updateStats();
+        renderAnswerSheet();
     }
 
     function goToPrev() {
-        if (currentIndex > 0) {
-            currentIndex--;
-            renderQuestion();
-        }
+        if (currentIndex > 0) { currentIndex--; renderQuestion(); }
     }
-
     function goToNext() {
-        if (currentIndex < questions.length - 1) {
-            currentIndex++;
-            renderQuestion();
-        } else {
-            if (questions.length > 0) {
-                alert('🎉 恭喜你完成所有题目！');
-            }
-        }
+        if (currentIndex < questions.length - 1) { currentIndex++; renderQuestion(); }
+        else if (questions.length) alert('🎉 恭喜你完成所有题目！');
     }
 
-    function resetQuiz() {
+    function resetProgress() {
         if (!questions.length) return;
+        if (!confirm('确定要重置所有答题进度吗？')) return;
         for (const q of questions) {
             q.userAnswer = null;
+            q.isCorrect = null;
         }
         currentIndex = 0;
         renderQuestion();
     }
 
-    // ============================================================
-    // 5. 文件上传 & 解析
-    // ============================================================
+    // ========== 文件上传 ==========
     function handleFile(file) {
         if (!file) return;
         if (!file.name.endsWith('.docx')) {
             alert('请上传 .docx 格式的文件');
             return;
         }
-
         const reader = new FileReader();
         reader.onload = function(e) {
-            const arrayBuffer = e.target.result;
-            mammoth.extractRawText({ arrayBuffer })
+            mammoth.extractRawText({ arrayBuffer: e.target.result })
                 .then(result => {
                     const text = result.value;
                     if (!text || text.trim().length < 10) {
@@ -1040,47 +829,33 @@
         reader.readAsArrayBuffer(file);
     }
 
-    // ============================================================
-    // 6. 事件绑定
-    // ============================================================
+    // ========== 事件绑定 ==========
     uploadBtn.addEventListener('click', () => fileInput.click());
-
     fileInput.addEventListener('change', (e) => {
-        if (e.target.files.length) {
-            handleFile(e.target.files[0]);
-        }
+        if (e.target.files.length) handleFile(e.target.files[0]);
         fileInput.value = '';
     });
-
-    uploadZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadZone.classList.add('drag-over');
-    });
-    uploadZone.addEventListener('dragleave', () => {
-        uploadZone.classList.remove('drag-over');
-    });
+    uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
     uploadZone.addEventListener('drop', (e) => {
         e.preventDefault();
         uploadZone.classList.remove('drag-over');
-        const files = e.dataTransfer.files;
-        if (files.length) {
-            handleFile(files[0]);
-        }
+        if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
     });
 
     prevBtn.addEventListener('click', goToPrev);
     nextBtn.addEventListener('click', goToNext);
     revealBtn.addEventListener('click', revealAnswer);
-    resetBtn.addEventListener('click', resetQuiz);
+    resetBtn.addEventListener('click', resetProgress);
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowLeft') goToPrev();
         if (e.key === 'ArrowRight') goToNext();
         if (e.key === 'Enter' && !e.shiftKey) revealAnswer();
-        if (e.key === 'r' || e.key === 'R') resetQuiz();
+        if (e.key === 'r' || e.key === 'R') resetProgress();
     });
 
-    console.log('📘 C++ 刷题工具已加载 (改进解析版)');
+    console.log('📘 C++ 刷题工具已加载（含答题卡）');
 </script>
 </body>
 </html>
